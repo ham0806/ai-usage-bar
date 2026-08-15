@@ -1,0 +1,4 @@
+httpx>=0.27
+pywin32>=306
+keyring>=25
+darkdetect>=0.8

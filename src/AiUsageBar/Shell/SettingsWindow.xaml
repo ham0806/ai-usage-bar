@@ -16,10 +16,10 @@
                 <TextBlock x:Name="GeneralHeader" Text="General" />
             </GroupBox.Header>
             <StackPanel>
-                <DockPanel Margin="0,4">
-                    <TextBlock x:Name="LanguageLabel" Text="Language" VerticalAlignment="Center" />
-                    <ComboBox x:Name="LanguageBox" Width="180" HorizontalAlignment="Right" />
-                </DockPanel>
+                <TextBlock x:Name="LanguageLabel" Text="Language" Margin="0,4,0,2" />
+                <RadioButton x:Name="LanguageSystemRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguageEnglishRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguageJapaneseRadio" GroupName="Language" Margin="0,4" />
                 <DockPanel Margin="0,4">
                     <TextBlock x:Name="RefreshLabel" Text="Refresh interval (seconds)" VerticalAlignment="Center" />
                     <TextBox x:Name="RefreshBox" Width="80" HorizontalAlignment="Right" />

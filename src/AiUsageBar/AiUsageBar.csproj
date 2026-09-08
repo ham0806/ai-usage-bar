@@ -11,7 +11,7 @@
     <RootNamespace>AiUsageBar</RootNamespace>
     <Product>AI Usage Bar</Product>
     <Version>0.1.0</Version>
-    <ApplicationIcon />
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

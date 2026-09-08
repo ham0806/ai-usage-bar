@@ -18,13 +18,23 @@ function Get-Dotnet {
     Write-Error ".NET 8 SDK was not found. Run: mise install dotnet@8"
 }
 
+$outDir = Join-Path $PSScriptRoot "dist\AI Usage Bar"
+if (Test-Path $outDir) {
+    Remove-Item $outDir -Recurse -Force
+}
+
 $dotnet = Get-Dotnet
 $publishArgs = @(
     "publish", "src\AiUsageBar\AiUsageBar.csproj",
     "-c", "Release",
     "-r", "win-x64",
     "--self-contained", "true",
-    "-o", "dist\AI Usage Bar"
+    "-o", $outDir,
+    "/p:PublishSingleFile=true",
+    "/p:IncludeNativeLibrariesForSelfExtract=true",
+    "/p:EnableCompressionInSingleFile=true",
+    "/p:DebugType=None",
+    "/p:DebugSymbols=false"
 )
 if ($Version) {
     $publishArgs += "/p:Version=$Version"
@@ -35,10 +45,12 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$exe = Join-Path $PSScriptRoot "dist\AI Usage Bar\AI Usage Bar.exe"
+Get-ChildItem $outDir -Filter *.pdb -ErrorAction SilentlyContinue | Remove-Item -Force
+
+$exe = Join-Path $outDir "AI Usage Bar.exe"
 if (-not (Test-Path $exe)) {
     Write-Error "exe was not written: $exe"
 }
 
 Write-Host "Built: $exe"
-Write-Host "Copy the whole folder. The exe does not run by itself."
+Get-ChildItem $outDir | ForEach-Object { Write-Host ("  {0}" -f $_.Name) }

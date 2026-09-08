@@ -29,7 +29,7 @@ jobs:
           if (Test-Path AI-Usage-Bar-win-x64.zip) {
             Remove-Item AI-Usage-Bar-win-x64.zip
           }
-          Compress-Archive -Path "dist\AI Usage Bar" -DestinationPath "AI-Usage-Bar-win-x64.zip"
+          Compress-Archive -Path "dist\AI Usage Bar\AI Usage Bar.exe" -DestinationPath "AI-Usage-Bar-win-x64.zip"
           $hash = (Get-FileHash "AI-Usage-Bar-win-x64.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
           Set-Content -Path SHA256SUMS.txt -Value "$hash  AI-Usage-Bar-win-x64.zip" -Encoding ascii
 

@@ -12,7 +12,7 @@ The bar shows icons and percentages only. Left-click opens details such as break
 
 ## Install
 
-Download `AI-Usage-Bar-win-x64.zip` from [Releases](https://github.com/ham0806/ai-usage-bar/releases). Extract the folder and run `AI Usage Bar.exe`. Copy the whole folder; the exe does not run by itself.
+Download `AI-Usage-Bar-win-x64.zip` from [Releases](https://github.com/ham0806/ai-usage-bar/releases). Extract it and run `AI Usage Bar.exe`.
 
 The UI follows the Windows display language (English or Japanese). Override it in Settings if needed.
 

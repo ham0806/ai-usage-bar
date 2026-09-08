@@ -153,10 +153,10 @@ public sealed class TaskbarWidget : IDisposable
             (int)point.X,
             (int)point.Y,
             [
-                (MenuRefresh, "今すぐ更新(&R)"),
-                (MenuSettings, "設定(&S)"),
+                (MenuRefresh, UiText.MenuRefresh),
+                (MenuSettings, UiText.MenuSettings),
                 null,
-                (MenuExit, "終了(&X)"),
+                (MenuExit, UiText.MenuExit),
             ]);
         if (command == MenuRefresh)
         {

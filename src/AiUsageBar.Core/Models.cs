@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace AiUsageBar.Core;
@@ -51,8 +52,8 @@ public static class Formatting
         }
 
         return Math.Abs(value - Math.Round(value)) < 0.05
-            ? $"{Math.Round(value):0}%"
-            : $"{value:0.0}%";
+            ? $"{Math.Round(value).ToString("0", CultureInfo.InvariantCulture)}%"
+            : $"{value.ToString("0.0", CultureInfo.InvariantCulture)}%";
     }
 
     public static DateTimeOffset UtcNow() => DateTimeOffset.UtcNow;
@@ -121,14 +122,14 @@ public static class Formatting
     {
         if (resetsAt is null)
         {
-            return "不明";
+            return UiText.Unknown;
         }
 
         now ??= UtcNow();
         var seconds = (int)(resetsAt.Value - now.Value).TotalSeconds;
         if (seconds <= 0)
         {
-            return "まもなく";
+            return UiText.Soon;
         }
 
         var minutes = seconds / 60;
@@ -138,15 +139,15 @@ public static class Formatting
         hours %= 24;
         if (days > 0)
         {
-            return $"{days}日{hours}時間後";
+            return UiText.ResetInDaysHours(days, hours);
         }
 
         if (hours > 0)
         {
-            return $"{hours}時間{minutes}分後";
+            return UiText.ResetInHoursMinutes(hours, minutes);
         }
 
-        return $"{minutes}分後";
+        return UiText.ResetInMinutes(minutes);
     }
 
     public static Dictionary<string, JsonElement> JwtPayload(string token)
@@ -192,7 +193,7 @@ public static class Formatting
     {
         if (!snapshot.Ok && !string.IsNullOrEmpty(snapshot.Error))
         {
-            return snapshot.Error!;
+            return UiText.ErrorLabel(snapshot.Error);
         }
 
         if (IsUnlimited(snapshot))
@@ -212,15 +213,7 @@ public static class Formatting
     public static bool IsUnlimited(ProviderSnapshot snapshot) =>
         snapshot.Ok && snapshot.Compact.Contains('∞');
 
-    public static string WindowLabel(string label) => label switch
-    {
-        "5h" => "5時間",
-        "7d" => "7日",
-        "1d" => "1日",
-        "30d" => "30日",
-        "1y" => "1年",
-        _ => label,
-    };
+    public static string WindowLabel(string label) => UiText.WindowLabel(label);
 
     public static string StripTitle(ProviderSnapshot snapshot)
     {

@@ -42,20 +42,21 @@ public static class CodexProvider
         catch (AuthRequiredException ex)
         {
             AppLog.Info($"Codex の認証が必要です: {CredentialStore.AsSafeError(ex)}");
-            return new ProviderSnapshot("codex", "Codex", false, "Codex 要認証", ["Codex", CredentialStore.AsSafeError(ex)], "要認証", updated);
+            return new ProviderSnapshot("codex", "Codex", false, UiText.CompactError("Codex", ProviderErrors.AuthRequired), ["Codex", UiText.CodexAuthHint], ProviderErrors.AuthRequired, updated);
         }
         catch (RateLimitedException)
         {
-            return new ProviderSnapshot("codex", "Codex", false, "Codex 制限中", ["Codex", "レート制限中です。しばらく待ってから再取得します"], "レート制限", updated);
+            return new ProviderSnapshot("codex", "Codex", false, UiText.CompactError("Codex", ProviderErrors.RateLimited), ["Codex", UiText.RateLimitedMessage], ProviderErrors.RateLimited, updated);
         }
         catch (FetchException ex)
         {
-            return new ProviderSnapshot("codex", "Codex", false, "Codex --", ["Codex", CredentialStore.AsSafeError(ex)], CredentialStore.AsSafeError(ex), updated);
+            AppLog.Error("Codex の HTTP 取得に失敗しました", ex);
+            return new ProviderSnapshot("codex", "Codex", false, "Codex --", ["Codex", UiText.FetchFailedMessage], ProviderErrors.FetchFailed, updated);
         }
         catch (Exception ex)
         {
             AppLog.Error("Codex の使用量取得で予期しないエラー", ex);
-            return new ProviderSnapshot("codex", "Codex", false, "Codex --", ["Codex", "取得に失敗しました"], "取得失敗", updated);
+            return new ProviderSnapshot("codex", "Codex", false, "Codex --", ["Codex", UiText.FetchFailedMessage], ProviderErrors.FetchFailed, updated);
         }
     }
 
@@ -90,8 +91,8 @@ public static class CodexProvider
         {
             var reset = Formatting.FormatReset(window.ResetsAt, updated);
             var percent = window.RemainingPercent is null ? "--" : Formatting.Percent(window.RemainingPercent.Value);
-            var when = window.ResetsAt is null ? "" : $"（{window.ResetsAt.Value.ToLocalTime():MM/dd HH:mm}）";
-            lines.Add($"{window.Label}  残り {percent}  リセット {reset}{when}");
+            var when = window.ResetsAt is null ? "" : UiText.ParentheticalTime(window.ResetsAt.Value.ToLocalTime().ToString("MM/dd HH:mm"));
+            lines.Add(UiText.WindowDetail(window.Label, percent, reset, when));
         }
 
         var creditLine = CreditLine(credits);
@@ -100,11 +101,11 @@ public static class CodexProvider
             lines.Add(creditLine);
         }
 
-        lines.Add($"最終更新  {updated.ToLocalTime():HH:mm:ss}");
+        lines.Add(UiText.Labeled(UiText.LastUpdated, updated.ToLocalTime().ToString("HH:mm:ss")));
         var metrics = windows.Select(window =>
         {
-            var remaining = window.RemainingPercent is null ? null : $"残り {Formatting.Percent(window.RemainingPercent.Value)}";
-            var reset = window.ResetsAt is null ? null : $"リセット {Formatting.FormatReset(window.ResetsAt, updated)}";
+            var remaining = window.RemainingPercent is null ? null : UiText.RemainingHint(Formatting.Percent(window.RemainingPercent.Value));
+            var reset = window.ResetsAt is null ? null : UiText.ResetHint(Formatting.FormatReset(window.ResetsAt, updated));
             var hint = string.Join(" · ", new[] { remaining, reset }.Where(part => !string.IsNullOrEmpty(part)));
             return new UsageMetric(window.Label, window.UsedPercent, string.IsNullOrEmpty(hint) ? null : hint);
         }).ToList();
@@ -768,7 +769,7 @@ public static class CodexProvider
 
         if (credits.TryGetProperty("unlimited", out var unlimited) && unlimited.ValueKind == JsonValueKind.True)
         {
-            return "Credits  無制限";
+            return UiText.CreditsUnlimited;
         }
 
         if (!credits.TryGetProperty("hasCredits", out var has) || has.ValueKind != JsonValueKind.True)
@@ -778,7 +779,7 @@ public static class CodexProvider
 
         if (!credits.TryGetProperty("balance", out var balance))
         {
-            return "Credits  あり";
+            return UiText.CreditsPresent;
         }
 
         var text = balance.ValueKind switch
@@ -789,7 +790,7 @@ public static class CodexProvider
         };
         if (string.IsNullOrEmpty(text) || text == "0")
         {
-            return "Credits  あり";
+            return UiText.CreditsPresent;
         }
 
         return $"Credits  {text}";

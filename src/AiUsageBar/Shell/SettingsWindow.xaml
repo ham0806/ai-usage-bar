@@ -6,37 +6,41 @@
         SizeToContent="WidthAndHeight"
         MinWidth="480"
         WindowStartupLocation="CenterScreen"
-        FontFamily="Yu Gothic UI, Segoe UI">
+        FontFamily="Segoe UI, Yu Gothic UI">
     <StackPanel Margin="20">
-        <TextBlock x:Name="TitleText" Text="設定" FontSize="16" FontWeight="Bold" />
-        <TextBlock x:Name="SubtitleText" Text="表示と更新の動作" Margin="0,0,0,12" />
+        <TextBlock x:Name="TitleText" Text="Settings" FontSize="16" FontWeight="Bold" />
+        <TextBlock x:Name="SubtitleText" Text="Display and refresh" Margin="0,0,0,12" />
 
         <GroupBox x:Name="GeneralBox" Padding="12" Margin="0,0,0,12">
             <GroupBox.Header>
-                <TextBlock x:Name="GeneralHeader" Text="一般" />
+                <TextBlock x:Name="GeneralHeader" Text="General" />
             </GroupBox.Header>
             <StackPanel>
                 <DockPanel Margin="0,4">
-                    <TextBlock x:Name="RefreshLabel" Text="更新間隔（秒）" VerticalAlignment="Center" />
+                    <TextBlock x:Name="LanguageLabel" Text="Language" VerticalAlignment="Center" />
+                    <ComboBox x:Name="LanguageBox" Width="180" HorizontalAlignment="Right" />
+                </DockPanel>
+                <DockPanel Margin="0,4">
+                    <TextBlock x:Name="RefreshLabel" Text="Refresh interval (seconds)" VerticalAlignment="Center" />
                     <TextBox x:Name="RefreshBox" Width="80" HorizontalAlignment="Right" />
                 </DockPanel>
-                <CheckBox x:Name="ShowCursorBox" Content="Cursor を表示" Margin="0,4" />
-                <CheckBox x:Name="ShowCodexBox" Content="Codex を表示" Margin="0,4" />
-                <CheckBox x:Name="StartupBox" Content="Windows 起動時に開始" Margin="0,4" />
+                <CheckBox x:Name="ShowCursorBox" Content="Show Cursor" Margin="0,4" />
+                <CheckBox x:Name="ShowCodexBox" Content="Show Codex" Margin="0,4" />
+                <CheckBox x:Name="StartupBox" Content="Start with Windows" Margin="0,4" />
             </StackPanel>
         </GroupBox>
 
         <GroupBox x:Name="PositionBox" Padding="12" Margin="0,0,0,12">
             <GroupBox.Header>
-                <TextBlock x:Name="PositionHeader" Text="位置" />
+                <TextBlock x:Name="PositionHeader" Text="Position" />
             </GroupBox.Header>
             <StackPanel>
                 <DockPanel Margin="0,4">
-                    <TextBlock x:Name="OffsetXLabel" Text="オフセット X" VerticalAlignment="Center" />
+                    <TextBlock x:Name="OffsetXLabel" Text="Offset X" VerticalAlignment="Center" />
                     <TextBox x:Name="OffsetXBox" Width="80" HorizontalAlignment="Right" />
                 </DockPanel>
                 <DockPanel Margin="0,4">
-                    <TextBlock x:Name="OffsetYLabel" Text="オフセット Y" VerticalAlignment="Center" />
+                    <TextBlock x:Name="OffsetYLabel" Text="Offset Y" VerticalAlignment="Center" />
                     <TextBox x:Name="OffsetYBox" Width="80" HorizontalAlignment="Right" />
                 </DockPanel>
             </StackPanel>
@@ -44,34 +48,34 @@
 
         <GroupBox x:Name="AuthBox" Padding="12" Margin="0,0,0,12">
             <GroupBox.Header>
-                <TextBlock x:Name="AuthHeader" Text="Cursor 認証" />
+                <TextBlock x:Name="AuthHeader" Text="Cursor sign-in" />
             </GroupBox.Header>
             <StackPanel>
-                <TextBlock x:Name="TokenLabel" Text="セッショントークン（任意）" />
+                <TextBlock x:Name="TokenLabel" Text="Session token (optional)" />
                 <PasswordBox x:Name="TokenBox" Margin="0,4,0,6" />
                 <TextBlock x:Name="TokenHint"
                            TextWrapping="Wrap"
-                           Text="cursor.com の Cookie「WorkosCursorSessionToken」を貼り付けます。ローカルの Cursor から取れる場合は空で構いません。" />
+                           Text="Paste the cursor.com cookie WorkosCursorSessionToken. Leave empty if the local Cursor app can supply it." />
             </StackPanel>
         </GroupBox>
 
         <GroupBox x:Name="CodexBox" Padding="12" Margin="0,0,0,16">
             <GroupBox.Header>
-                <TextBlock x:Name="CodexHeader" Text="Codex 認証" />
+                <TextBlock x:Name="CodexHeader" Text="Codex sign-in" />
             </GroupBox.Header>
             <StackPanel>
                 <TextBlock x:Name="CodexHint"
                            TextWrapping="Wrap"
-                           Text="普段使っている codex login の auth.json を使います。期限切れのときは下のボタンからログインし直してください。" />
-                <Button x:Name="CodexLoginButton" Content="codex login を開く" Margin="0,10,0,0" Padding="12,6" HorizontalAlignment="Left" Click="LoginCodex" />
+                           Text="Uses the auth.json from your usual codex login. If it expires, sign in again with the button below." />
+                <Button x:Name="CodexLoginButton" Content="Open codex login" Margin="0,10,0,0" Padding="12,6" HorizontalAlignment="Left" Click="LoginCodex" />
             </StackPanel>
         </GroupBox>
 
         <DockPanel>
-            <Button x:Name="ClearButton" Content="保存したトークンを削除" HorizontalAlignment="Left" Padding="12,6" Click="ClearToken" />
+            <Button x:Name="ClearButton" Content="Remove saved token" HorizontalAlignment="Left" Padding="12,6" Click="ClearToken" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button x:Name="CancelButton" Content="キャンセル" Padding="12,6" Margin="0,0,8,0" Click="Cancel" />
-                <Button x:Name="SaveButton" Content="保存" Padding="16,6" Click="Save" />
+                <Button x:Name="CancelButton" Content="Cancel" Padding="12,6" Margin="0,0,8,0" Click="Cancel" />
+                <Button x:Name="SaveButton" Content="Save" Padding="16,6" Click="Save" />
             </StackPanel>
         </DockPanel>
     </StackPanel>

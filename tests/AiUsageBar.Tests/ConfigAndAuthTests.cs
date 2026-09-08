@@ -48,9 +48,12 @@ public class ConfigAndAuthTests
         var snapshot = new ProviderSnapshot("cursor", "Cursor", true, "Cursor Auto 42% · API 18.5%", ["Cursor"], null, null, 42);
         Assert.Equal("42%", Formatting.ShortMetric(snapshot));
         Assert.Equal("∞", Formatting.ShortMetric(new ProviderSnapshot("cursor", "Cursor", true, "Cursor ∞", ["Cursor"], null, null, null)));
-        Assert.Equal("要認証", Formatting.ShortMetric(new ProviderSnapshot("cursor", "Cursor", false, "Cursor 要認証", ["Cursor"], "要認証")));
-        Assert.Equal("5時間", Formatting.WindowLabel("5h"));
-        Assert.Equal("30日", Formatting.WindowLabel("30d"));
+        using (new UiCulture("ja-JP"))
+        {
+            Assert.Equal("要認証", Formatting.ShortMetric(new ProviderSnapshot("cursor", "Cursor", false, "Cursor 要認証", ["Cursor"], ProviderErrors.AuthRequired)));
+            Assert.Equal("5時間", Formatting.WindowLabel("5h"));
+            Assert.Equal("30日", Formatting.WindowLabel("30d"));
+        }
     }
 
     [Fact]

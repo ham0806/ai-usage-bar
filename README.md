@@ -1,85 +1,91 @@
 # AI Usage Bar
 
-Windows 11 のタスクバー通知領域の左隣に、Cursor と Codex の使用量を常時表示します。
+English | [日本語](README.ja.md)
 
-![タスクバーの使用率](docs/bar.png)
+Shows Cursor and Codex usage on the Windows 11 taskbar, just left of the notification area.
 
-タスクバーにはアイコンと使用率だけを出します。左クリックで内訳・リセット・課金周期などの詳細、右クリックから更新・設定・終了ができます。
+![Taskbar usage](docs/bar.png)
 
-![詳細フライアウト](docs/flyout.png)
+The bar shows icons and percentages only. Left-click opens details such as breakdown, reset time, and billing cycle. Right-click has Refresh, Settings, and Exit.
 
-## 必要環境
+![Details flyout](docs/flyout.png)
+
+## Install
+
+Download `AI-Usage-Bar-win-x64.zip` from [Releases](https://github.com/ham0806/ai-usage-bar/releases). Extract the folder and run `AI Usage Bar.exe`. Copy the whole folder; the exe does not run by itself.
+
+The UI follows the Windows display language (English or Japanese). Override it in Settings if needed.
+
+## Requirements
 
 - Windows 11
-- .NET 8 SDK（開発時。`mise install dotnet@8`）
-- Codex を見る場合は、普段使っている `codex login` 済みの環境
-- Cursor を見る場合は、Cursor にログイン済みか、後述のセッショントークン
+- .NET 8 SDK for development (`mise install dotnet@8`)
+- For Codex: a working `codex login`
+- For Cursor: a signed-in Cursor app, or the session token described below
 
-## 起動
-
-リポジトリで次を実行します。
+## Run from source
 
 ```powershell
 .\run.ps1
 ```
 
-ログを見たいときや、ビルド済み exe がまだ無いときは次です。
+To see logs, or if the exe is not built yet:
 
 ```powershell
 dotnet run --project src\AiUsageBar\AiUsageBar.csproj
 ```
 
-すでに起動している場合は、二重起動せずに終了します。終了はウィジェットを右クリックして「終了」です。
+A second launch exits instead of opening another instance. Exit from the widget's right-click menu.
 
-Windows 起動時に始める場合は、ウィジェットの右クリックから設定を開き、「Windows 起動時に開始」をオンにします。
+To start with Windows, open Settings from the right-click menu and turn on **Start with Windows**.
 
-## exe で起動する
+## Build the exe
 
-.NET を入れていない PC でも、`build.ps1` で作った exe をダブルクリックして起動できます。
+On a PC without .NET, you can still run the exe produced by `build.ps1`.
 
 ```powershell
 .\build.ps1
 ```
 
-出力は `dist\AI Usage Bar\AI Usage Bar.exe` です。フォルダごとコピーしてください。exe 単体では動きません。
+Output: `dist\AI Usage Bar\AI Usage Bar.exe`. If you started from the exe, **Start with Windows** registers that exe.
 
-exe から起動しているときは、「Windows 起動時に開始」もその exe を登録します。
+Releases are published when a `vX.Y.Z` tag is pushed. GitHub Actions tests, builds the zip, and attaches it to the GitHub Release.
 
-## Cursor の認証
+## Cursor auth
 
-優先して `%APPDATA%\Cursor\User\globalStorage\state.vscdb` の `cursorAuth/accessToken` を使います。取れないとき、または 401 になったときは設定に貼ったトークンを使います。トークンは Windows の資格情報マネージャーへ保存します。
+The app first reads `cursorAuth/accessToken` from `%APPDATA%\Cursor\User\globalStorage\state.vscdb`. If that is missing or returns 401, it uses the token pasted in Settings. Tokens are stored in Windows Credential Manager.
 
-貼り付ける値は cursor.com にログインしたブラウザの Cookie `WorkosCursorSessionToken` です。Chrome の開発者ツールで Application → Cookies → `https://cursor.com` からコピーできます。
+Paste the `WorkosCursorSessionToken` cookie from cursor.com. In Chrome: DevTools → Application → Cookies → `https://cursor.com`.
 
-この Cursor 側の取得は公式 API ではなく、ダッシュボードと同じ非公式エンドポイント `GET https://cursor.com/api/usage-summary` です。仕様変更やセッション期限切れで止まることがあります。
+Cursor usage comes from the unofficial dashboard endpoint `GET https://cursor.com/api/usage-summary`, not an official API. It can break after product changes or when the session expires.
 
-## Codex の認証
+## Codex auth
 
-`%USERPROFILE%\.codex\auth.json`（または環境変数 `CODEX_HOME`）の ChatGPT OAuth を使い、期限が近いときは公式 CLI と同じ JSON でトークンを更新して `auth.json` に書き戻します。呼び出し先は `https://chatgpt.com/backend-api/codex/usage` と `https://chatgpt.com/backend-api/wham/usage` です。まだ失敗するときはインストール済みの `codex app-server` に JSON-RPC で `account/rateLimits/read` を投げます。設定の「codex login を開く」からもログインできます。トークンの中身はログに書きません。
+Uses ChatGPT OAuth from `%USERPROFILE%\.codex\auth.json` (or `CODEX_HOME`). Near expiry it refreshes with the same JSON as the official CLI and writes back to `auth.json`. Endpoints: `https://chatgpt.com/backend-api/codex/usage` and `https://chatgpt.com/backend-api/wham/usage`. If those fail, it calls `account/rateLimits/read` on the installed `codex app-server` over JSON-RPC. Settings also has **Open codex login**. Tokens are not written to the log.
 
-## 設定
+## Settings
 
-`%LOCALAPPDATA%\ai-usage-bar\config.json` に更新間隔と表示対象、位置オフセットを保存します。秘密情報は入れません。ログは `%TEMP%\ai-usage-bar.log` です。
+`%LOCALAPPDATA%\ai-usage-bar\config.json` stores refresh interval, which providers to show, position offset, and language. It does not store secrets. Logs: `%TEMP%\ai-usage-bar.log`.
 
-位置が通知領域と重なるときは、設定のオフセット X / Y でずらしてください。
+If the bar overlaps the notification area, move it with Offset X / Y in Settings.
 
-## アイコン
+## Icons
 
-公式ロゴは同梱しません。各自で PNG を用意し、次の名前で置いてください。無いときはアイコンなしで数字だけ出ます。起動中に置いた場合は、次の描画（更新やホバー）で読み込みます。
+Official logos are not bundled. Place your own PNGs with these names. Without them, only numbers are shown. Files added while running are picked up on the next draw (refresh or hover).
 
 `%LOCALAPPDATA%\ai-usage-bar\icons\`
 
 - `cursor-dark.png` / `cursor-light.png`
 - `codex-dark.png` / `codex-light.png`
 
-推奨は 64px 前後の正方形です。暗いタスクバーには `-dark`、明るいときは `-light` を使います。これらのファイルはコミットしないでください。
+About 64px square is enough. Use `-dark` on a dark taskbar and `-light` on a light one. Do not commit these files.
 
-## テスト
+## Tests
 
 ```powershell
 dotnet test AiUsageBar.sln
 ```
 
-## 制限
+## Limits
 
-タスクバーへの重ね合わせは Windows の公式 API ではありません。大型アップデートのあとで位置がずれることがあります。Chrome の App-Bound Encryption があるため、ブラウザ Cookie の自動抽出はしていません。
+Overlaying the taskbar is not a documented Windows API. Position can drift after a major Windows update. Browser cookies are not extracted automatically because of Chrome App-Bound Encryption.

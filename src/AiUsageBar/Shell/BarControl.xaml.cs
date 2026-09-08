@@ -32,7 +32,7 @@ public partial class BarControl : UserControl
         HoverBorder.Padding = new Thickness(8 * dipScale, 0, 8 * dipScale, 0);
         ToolTip = snapshots.Count == 0
             ? "AI Usage Bar"
-            : string.Join("  |  ", snapshots.Select(item => $"{item.Title} {Formatting.ShortMetric(item)}")) + "\nクリックで詳細";
+            : string.Join("  |  ", snapshots.Select(item => $"{item.Title} {Formatting.ShortMetric(item)}")) + "\n" + UiText.ClickForDetails;
         Row.Children.Clear();
         if (snapshots.Count == 0)
         {

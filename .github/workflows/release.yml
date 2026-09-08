@@ -1,0 +1,45 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Test
+        run: dotnet test AiUsageBar.sln -c Release --nologo
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.Substring(1)
+          ./build.ps1 -Version $version
+          if (Test-Path AI-Usage-Bar-win-x64.zip) {
+            Remove-Item AI-Usage-Bar-win-x64.zip
+          }
+          Compress-Archive -Path "dist\AI Usage Bar" -DestinationPath "AI-Usage-Bar-win-x64.zip"
+          $hash = (Get-FileHash "AI-Usage-Bar-win-x64.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -Path SHA256SUMS.txt -Value "$hash  AI-Usage-Bar-win-x64.zip" -Encoding ascii
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            "AI-Usage-Bar-win-x64.zip" `
+            "SHA256SUMS.txt" `
+            --title "AI Usage Bar $env:GITHUB_REF_NAME" `
+            --generate-notes

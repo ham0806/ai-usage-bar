@@ -47,7 +47,7 @@ public partial class App : Application
 
         if (!created)
         {
-            WindowChrome.MessageBox("AI Usage Bar はすでに起動しています。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.AlreadyRunning, "AI Usage Bar");
             Shutdown();
             return;
         }
@@ -56,6 +56,7 @@ public partial class App : Application
 
         AppLog.Setup();
         _config = AppConfig.Load();
+        UiText.Apply(_config.Language);
         if (_config.StartWithWindows)
         {
             try
@@ -130,12 +131,13 @@ public partial class App : Application
         catch (Exception ex)
         {
             AppLog.Error("設定ウィンドウを開けませんでした", ex);
-            WindowChrome.MessageBox("設定画面を開けませんでした。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.SettingsOpenFailed, "AI Usage Bar");
         }
     }
 
     private void SaveSettings(AppConfig config)
     {
+        UiText.Apply(config.Language);
         _config = config;
         config.Save();
         try
@@ -145,7 +147,7 @@ public partial class App : Application
         catch (Exception ex)
         {
             AppLog.Error("スタートアップ登録に失敗しました", ex);
-            WindowChrome.MessageBox("スタートアップへの登録または解除に失敗しました。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.StartupFailed, "AI Usage Bar");
         }
 
         RefreshNow();

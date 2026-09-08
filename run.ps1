@@ -17,7 +17,7 @@ function Get-Dotnet {
     if (Test-Path $mise) {
         return $mise
     }
-    Write-Error ".NET 8 SDK が見つかりません。先に mise install dotnet@8 を実行するか、.\build.ps1 で exe を作ってください。"
+    Write-Error ".NET 8 SDK was not found. Run mise install dotnet@8, or build the exe with .\build.ps1."
 }
 
 $dotnet = Get-Dotnet

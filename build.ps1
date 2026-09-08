@@ -1,4 +1,8 @@
-# AI Usage Bar の Windows exe を dist\AI Usage Bar\ に作る
+# Build the self-contained Windows exe into dist\AI Usage Bar\
+param(
+    [string]$Version
+)
+
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
@@ -11,19 +15,30 @@ function Get-Dotnet {
     if (Test-Path $mise) {
         return $mise
     }
-    Write-Error ".NET 8 SDK が見つかりません。mise install dotnet@8 を実行してください。"
+    Write-Error ".NET 8 SDK was not found. Run: mise install dotnet@8"
 }
 
 $dotnet = Get-Dotnet
-& $dotnet publish src\AiUsageBar\AiUsageBar.csproj -c Release -r win-x64 --self-contained true -o "dist\AI Usage Bar"
+$publishArgs = @(
+    "publish", "src\AiUsageBar\AiUsageBar.csproj",
+    "-c", "Release",
+    "-r", "win-x64",
+    "--self-contained", "true",
+    "-o", "dist\AI Usage Bar"
+)
+if ($Version) {
+    $publishArgs += "/p:Version=$Version"
+}
+
+& $dotnet @publishArgs
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
 $exe = Join-Path $PSScriptRoot "dist\AI Usage Bar\AI Usage Bar.exe"
 if (-not (Test-Path $exe)) {
-    Write-Error "exe が出力されませんでした: $exe"
+    Write-Error "exe was not written: $exe"
 }
 
-Write-Host "完成: $exe"
-Write-Host "このフォルダごとコピーして使ってください。exe 単体では動きません。"
+Write-Host "Built: $exe"
+Write-Host "Copy the whole folder. The exe does not run by itself."

@@ -13,7 +13,7 @@ public partial class FlyoutWindow : Window
 {
     private DateTime _openedAt = DateTime.MinValue;
     private readonly DispatcherTimer _hideTimer;
-    private static readonly FontFamily FlyoutFont = new("Yu Gothic UI, Segoe UI Variable Text, Segoe UI");
+    private static readonly FontFamily FlyoutFont = new("Segoe UI Variable Text, Segoe UI, Yu Gothic UI");
 
     public FlyoutWindow()
     {
@@ -78,7 +78,7 @@ public partial class FlyoutWindow : Window
     {
         if (snapshots.Count == 0)
         {
-            body.Children.Add(Label("表示するプロバイダがありません", 12, theme.Muted));
+            body.Children.Add(Label(UiText.NoProviders, 12, theme.Muted));
             return;
         }
 
@@ -257,7 +257,7 @@ public partial class FlyoutWindow : Window
     {
         if (!snapshot.Ok && !string.IsNullOrEmpty(snapshot.Error))
         {
-            return snapshot.Error;
+            return UiText.ErrorLabel(snapshot.Error);
         }
 
         if (Formatting.IsUnlimited(snapshot))

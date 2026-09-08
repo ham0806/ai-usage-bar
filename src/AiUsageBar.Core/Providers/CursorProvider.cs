@@ -42,19 +42,18 @@ public static class CursorProvider
 
             return FromPayload(payload, updated);
         }
-        catch (AuthRequiredException ex)
+        catch (AuthRequiredException)
         {
             return new ProviderSnapshot(
                 "cursor",
                 "Cursor",
                 false,
-                "Cursor 要認証",
+                UiText.CompactError("Cursor", ProviderErrors.AuthRequired),
                 [
                     "Cursor",
-                    CredentialStore.AsSafeError(ex),
-                    "cursor.com にログインするか、設定から Cookie を貼り付けてください",
+                    UiText.CursorAuthHint,
                 ],
-                "要認証",
+                ProviderErrors.AuthRequired,
                 updated);
         }
         catch (RateLimitedException)
@@ -63,19 +62,20 @@ public static class CursorProvider
                 "cursor",
                 "Cursor",
                 false,
-                "Cursor 制限中",
-                ["Cursor", "レート制限中です。しばらく待ってから再取得します"],
-                "レート制限",
+                UiText.CompactError("Cursor", ProviderErrors.RateLimited),
+                ["Cursor", UiText.RateLimitedMessage],
+                ProviderErrors.RateLimited,
                 updated);
         }
         catch (FetchException ex)
         {
-            return new ProviderSnapshot("cursor", "Cursor", false, "Cursor --", ["Cursor", CredentialStore.AsSafeError(ex)], CredentialStore.AsSafeError(ex), updated);
+            AppLog.Error("Cursor の HTTP 取得に失敗しました", ex);
+            return new ProviderSnapshot("cursor", "Cursor", false, "Cursor --", ["Cursor", UiText.FetchFailedMessage], ProviderErrors.FetchFailed, updated);
         }
         catch (Exception ex)
         {
             AppLog.Error("Cursor の使用量取得で予期しないエラー", ex);
-            return new ProviderSnapshot("cursor", "Cursor", false, "Cursor --", ["Cursor", "取得に失敗しました"], "取得失敗", updated);
+            return new ProviderSnapshot("cursor", "Cursor", false, "Cursor --", ["Cursor", UiText.FetchFailedMessage], ProviderErrors.FetchFailed, updated);
         }
     }
 
@@ -140,7 +140,7 @@ public static class CursorProvider
         var lines = new List<string> { "Cursor" + (membership is null ? "" : $"  {membership}") };
         if (unlimited)
         {
-            lines.Add("プラン  無制限");
+            lines.Add(UiText.Labeled(UiText.Plan, UiText.Unlimited));
         }
         else
         {
@@ -158,8 +158,8 @@ public static class CursorProvider
             {
                 var used = plan.ValueKind == JsonValueKind.Object ? Formatting.Number(plan, "used") : null;
                 var limit = plan.ValueKind == JsonValueKind.Object ? Formatting.Number(plan, "limit") : null;
-                var extra = used is not null && limit is not null && limit > 0 ? $"（{used:0}/{limit:0}）" : "";
-                lines.Add($"プラン  {Formatting.Percent(total.Value)}{extra}");
+                var extra = used is not null && limit is not null && limit > 0 ? UiText.UsedOfLimitSuffix(used.Value, limit.Value) : "";
+                lines.Add(UiText.Labeled(UiText.Plan, Formatting.Percent(total.Value) + extra));
             }
         }
 
@@ -168,7 +168,7 @@ public static class CursorProvider
             payload.TryGetProperty("billingCycleEnd", out var end) ? Formatting.ParseTimestamp(end) : null);
         if (cycle is not null)
         {
-            lines.Add($"課金周期  {cycle}");
+            lines.Add(UiText.Labeled(UiText.BillingCycle, cycle));
         }
 
         if (onDemand.ValueKind == JsonValueKind.Object && onDemand.TryGetProperty("enabled", out var enabled) && enabled.ValueKind == JsonValueKind.True)
@@ -177,19 +177,19 @@ public static class CursorProvider
             var limit = Formatting.Number(onDemand, "limit");
             if (used is not null && limit is not null)
             {
-                lines.Add($"オンデマンド  {used:0}/{limit:0}");
+                lines.Add(UiText.Labeled(UiText.OnDemand, $"{used:0}/{limit:0}"));
             }
             else if (used is not null)
             {
-                lines.Add($"オンデマンド  {used:0}");
+                lines.Add(UiText.Labeled(UiText.OnDemand, $"{used:0}"));
             }
         }
 
-        lines.Add($"最終更新  {updated.ToLocalTime():HH:mm:ss}");
+        lines.Add(UiText.Labeled(UiText.LastUpdated, updated.ToLocalTime().ToString("HH:mm:ss")));
         var metrics = new List<UsageMetric>();
         if (unlimited)
         {
-            metrics.Add(new UsageMetric("プラン", null, "無制限"));
+            metrics.Add(new UsageMetric(UiText.Plan, null, UiText.Unlimited));
         }
         else
         {
@@ -207,8 +207,8 @@ public static class CursorProvider
             {
                 var used = plan.ValueKind == JsonValueKind.Object ? Formatting.Number(plan, "used") : null;
                 var limit = plan.ValueKind == JsonValueKind.Object ? Formatting.Number(plan, "limit") : null;
-                var extra = used is not null && limit is not null && limit > 0 ? $"{used:0}/{limit:0}" : null;
-                metrics.Add(new UsageMetric("プラン", total, extra));
+                var extra = used is not null && limit is not null && limit > 0 ? UiText.UsedOfLimit(used.Value, limit.Value) : null;
+                metrics.Add(new UsageMetric(UiText.Plan, total, extra));
             }
         }
 
@@ -219,7 +219,7 @@ public static class CursorProvider
             ok,
             compact,
             lines,
-            ok ? null : "使用量を解釈できませんでした",
+            ok ? null : ProviderErrors.Unparsed,
             updated,
             usedPercent,
             membership,
@@ -359,6 +359,6 @@ public static class CursorProvider
         }
 
         string Fmt(DateTimeOffset? value) => value is null ? "?" : value.Value.ToLocalTime().ToString("yyyy-MM-dd");
-        return $"{Fmt(start)} ～ {Fmt(end)}";
+        return $"{Fmt(start)} {UiText.RangeSeparator} {Fmt(end)}";
     }
 }

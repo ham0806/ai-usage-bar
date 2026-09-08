@@ -23,6 +23,9 @@ public sealed class AppConfig
     [JsonPropertyName("offset_y")]
     public int OffsetY { get; set; }
 
+    [JsonPropertyName("language")]
+    public string Language { get; set; } = UiText.SystemLanguage;
+
     public AppConfig Normalized()
     {
         return new AppConfig
@@ -33,6 +36,7 @@ public sealed class AppConfig
             StartWithWindows = StartWithWindows,
             OffsetX = OffsetX,
             OffsetY = OffsetY,
+            Language = UiText.NormalizeLanguage(Language),
         };
     }
 

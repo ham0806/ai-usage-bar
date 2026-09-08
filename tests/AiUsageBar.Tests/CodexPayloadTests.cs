@@ -38,6 +38,7 @@ public class CodexPayloadTests
             }
             """;
         using var doc = JsonDocument.Parse(json);
+        using var _ = new UiCulture("ja-JP");
         var snapshot = CodexProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
         Assert.Equal("Codex 5h 81.8% · 7d 91%", snapshot.Compact);
         Assert.Equal("18.2%", Formatting.ShortMetric(snapshot));
@@ -179,6 +180,7 @@ public class CursorPayloadTests
     {
         const string json = """{ "isUnlimited": true, "membershipType": "pro" }""";
         using var doc = JsonDocument.Parse(json);
+        using var _ = new UiCulture("ja-JP");
         var snapshot = CursorProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
         Assert.Equal("Cursor ∞", snapshot.Compact);
         Assert.Equal("∞", Formatting.ShortMetric(snapshot));

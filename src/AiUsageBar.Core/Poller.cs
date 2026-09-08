@@ -101,11 +101,11 @@ public sealed class Poller : IDisposable
         var snapshot = await fetcher().ConfigureAwait(false);
         _last[key] = snapshot;
         var delay = 0.0;
-        if (snapshot.Error == "レート制限")
+        if (snapshot.Error == ProviderErrors.RateLimited)
         {
             delay = 300;
         }
-        else if (snapshot.Error == "要認証")
+        else if (snapshot.Error == ProviderErrors.AuthRequired)
         {
             delay = 180;
         }

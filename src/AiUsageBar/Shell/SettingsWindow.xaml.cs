@@ -23,6 +23,8 @@ public partial class SettingsWindow : Window
         OffsetXBox.Text = config.OffsetX.ToString();
         OffsetYBox.Text = config.OffsetY.ToString();
         TokenBox.Password = CredentialStore.GetCursorToken() ?? "";
+        FillLanguageBox(config.Language);
+        ApplyStrings();
         ApplyTheme();
         SourceInitialized += (_, _) => ApplyChrome();
         Loaded += (_, _) =>
@@ -61,6 +63,7 @@ public partial class SettingsWindow : Window
         OffsetXLabel.Foreground = fg;
         OffsetYLabel.Foreground = fg;
         TokenLabel.Foreground = fg;
+        LanguageLabel.Foreground = fg;
         TokenHint.Foreground = muted;
         CodexHint.Foreground = muted;
 
@@ -86,12 +89,66 @@ public partial class SettingsWindow : Window
         TokenBox.BorderBrush = border;
         TokenBox.CaretBrush = fg;
 
+        LanguageBox.Foreground = fg;
+        LanguageBox.Background = input;
+        LanguageBox.BorderBrush = border;
+
         foreach (var buttonControl in new[] { ClearButton, CancelButton, SaveButton, CodexLoginButton })
         {
             buttonControl.Foreground = fg;
             buttonControl.Background = button;
             buttonControl.BorderBrush = border;
         }
+    }
+
+    private void ApplyStrings()
+    {
+        TitleText.Text = UiText.SettingsTitle;
+        SubtitleText.Text = UiText.SettingsSubtitle;
+        GeneralHeader.Text = UiText.GeneralHeader;
+        LanguageLabel.Text = UiText.LanguageLabel;
+        RefreshLabel.Text = UiText.RefreshInterval;
+        ShowCursorBox.Content = UiText.ShowCursor;
+        ShowCodexBox.Content = UiText.ShowCodex;
+        StartupBox.Content = UiText.StartWithWindows;
+        PositionHeader.Text = UiText.PositionHeader;
+        OffsetXLabel.Text = UiText.OffsetX;
+        OffsetYLabel.Text = UiText.OffsetY;
+        AuthHeader.Text = UiText.CursorAuthHeader;
+        TokenLabel.Text = UiText.SessionToken;
+        TokenHint.Text = UiText.TokenHint;
+        CodexHeader.Text = UiText.CodexAuthHeader;
+        CodexHint.Text = UiText.CodexHint;
+        CodexLoginButton.Content = UiText.OpenCodexLogin;
+        ClearButton.Content = UiText.ClearSavedToken;
+        CancelButton.Content = UiText.Cancel;
+        SaveButton.Content = UiText.Save;
+    }
+
+    private void FillLanguageBox(string language)
+    {
+        LanguageBox.Items.Clear();
+        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageSystem, Tag = UiText.SystemLanguage });
+        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageEnglish, Tag = UiText.EnglishLanguage });
+        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageJapanese, Tag = UiText.JapaneseLanguage });
+        var selected = UiText.NormalizeLanguage(language);
+        foreach (ComboBoxItem item in LanguageBox.Items)
+        {
+            if (string.Equals(item.Tag as string, selected, StringComparison.Ordinal))
+            {
+                LanguageBox.SelectedItem = item;
+                return;
+            }
+        }
+
+        LanguageBox.SelectedIndex = 0;
+    }
+
+    private string SelectedLanguage()
+    {
+        return LanguageBox.SelectedItem is ComboBoxItem item && item.Tag is string tag
+            ? UiText.NormalizeLanguage(tag)
+            : UiText.SystemLanguage;
     }
 
     private static void StyleInput(TextBox field, Brush fg, Brush input, Brush border)
@@ -126,7 +183,7 @@ public partial class SettingsWindow : Window
         var command = CodexAuth.FindCli();
         if (command is null)
         {
-            WindowChrome.MessageBox("codex CLI が見つかりません。PATH に codex を入れてから、もう一度実行してください。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.CodexCliMissing, "AI Usage Bar");
             return;
         }
 
@@ -145,12 +202,12 @@ public partial class SettingsWindow : Window
 
             psi.ArgumentList.Add("login");
             System.Diagnostics.Process.Start(psi);
-            WindowChrome.MessageBox("ブラウザで Codex にログインしたあと、バーを右クリックして「今すぐ更新」してください。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.CodexLoginStarted, "AI Usage Bar");
         }
         catch (Exception ex)
         {
             AppLog.Error("codex login を起動できませんでした", ex);
-            WindowChrome.MessageBox("codex login を起動できませんでした。", "AI Usage Bar");
+            WindowChrome.MessageBox(UiText.CodexLoginFailed, "AI Usage Bar");
         }
     }
 
@@ -166,6 +223,7 @@ public partial class SettingsWindow : Window
             StartWithWindows = StartupBox.IsChecked == true,
             OffsetX = ParseInt(OffsetXBox.Text, 0),
             OffsetY = ParseInt(OffsetYBox.Text, 0),
+            Language = SelectedLanguage(),
         }.Normalized();
         var token = TokenBox.Password.Trim();
         CredentialStore.SetCursorToken(string.IsNullOrEmpty(token) ? null : token);

@@ -22,6 +22,7 @@ internal static class PreviewCapture
             var suffix = theme.Light ? "light" : "dark";
             SavePng(BuildBar(snapshots, theme), Path.Combine(dir, $"bar-{suffix}.png"));
             SavePng(BuildFlyout(snapshots, theme), Path.Combine(dir, $"flyout-{suffix}.png"));
+            SavePng(BuildSettings(theme), Path.Combine(dir, $"settings-{suffix}.png"));
         }
     }
 
@@ -84,6 +85,27 @@ internal static class PreviewCapture
             Child = bar,
         };
         Prepare(host, host.Width, host.Height);
+        return host;
+    }
+
+    private static FrameworkElement BuildSettings(Theme theme)
+    {
+        var window = new SettingsWindow(new AppConfig(), _ => { }, theme);
+        var content = (FrameworkElement)window.Content;
+        window.Content = null;
+        var host = new Border
+        {
+            Background = window.Background,
+            Child = content,
+            Width = 480,
+            SnapsToDevicePixels = true,
+            UseLayoutRounding = true,
+        };
+        host.Measure(new Size(480, double.PositiveInfinity));
+        var height = Math.Ceiling(host.DesiredSize.Height);
+        host.Width = 480;
+        host.Height = height;
+        Prepare(host, 480, height);
         return host;
     }
 

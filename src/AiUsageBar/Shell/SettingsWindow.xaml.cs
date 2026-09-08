@@ -11,11 +11,18 @@ namespace AiUsageBar.Shell;
 public partial class SettingsWindow : Window
 {
     private readonly Action<AppConfig> _onSave;
+    private readonly Theme _theme;
 
     public SettingsWindow(AppConfig config, Action<AppConfig> onSave)
+        : this(config, onSave, Themes.Current())
+    {
+    }
+
+    internal SettingsWindow(AppConfig config, Action<AppConfig> onSave, Theme theme)
     {
         InitializeComponent();
         _onSave = onSave;
+        _theme = theme;
         RefreshBox.Text = config.RefreshSeconds.ToString();
         ShowCursorBox.IsChecked = config.ShowCursor;
         ShowCodexBox.IsChecked = config.ShowCodex;
@@ -23,7 +30,7 @@ public partial class SettingsWindow : Window
         OffsetXBox.Text = config.OffsetX.ToString();
         OffsetYBox.Text = config.OffsetY.ToString();
         TokenBox.Password = CredentialStore.GetCursorToken() ?? "";
-        FillLanguageBox(config.Language);
+        SelectLanguage(config.Language);
         ApplyStrings();
         ApplyTheme();
         SourceInitialized += (_, _) => ApplyChrome();
@@ -43,11 +50,11 @@ public partial class SettingsWindow : Window
 
     private void ApplyTheme()
     {
-        var theme = Themes.Current();
+        var theme = _theme;
         var fg = Brush(theme.Fg);
         var muted = Brush(theme.Muted);
         var bg = Brush(theme.FlyoutBg);
-        var input = Brush(Themes.MixHex(theme.FlyoutBg, theme.Fg, theme.Light ? 0.08 : 0.14));
+        var input = Brush(Themes.MixHex(theme.FlyoutBg, theme.Fg, theme.Light ? 0.12 : 0.22));
         var border = Brush(theme.Border);
         var button = Brush(Themes.MixHex(theme.FlyoutBg, theme.Fg, 0.12));
 
@@ -74,7 +81,7 @@ public partial class SettingsWindow : Window
             box.Background = Brushes.Transparent;
         }
 
-        foreach (var check in new[] { ShowCursorBox, ShowCodexBox, StartupBox })
+        foreach (Control check in new Control[] { ShowCursorBox, ShowCodexBox, StartupBox, LanguageSystemRadio, LanguageEnglishRadio, LanguageJapaneseRadio })
         {
             check.Foreground = fg;
         }
@@ -88,10 +95,6 @@ public partial class SettingsWindow : Window
         TokenBox.Background = input;
         TokenBox.BorderBrush = border;
         TokenBox.CaretBrush = fg;
-
-        LanguageBox.Foreground = fg;
-        LanguageBox.Background = input;
-        LanguageBox.BorderBrush = border;
 
         foreach (var buttonControl in new[] { ClearButton, CancelButton, SaveButton, CodexLoginButton })
         {
@@ -107,6 +110,9 @@ public partial class SettingsWindow : Window
         SubtitleText.Text = UiText.SettingsSubtitle;
         GeneralHeader.Text = UiText.GeneralHeader;
         LanguageLabel.Text = UiText.LanguageLabel;
+        LanguageSystemRadio.Content = UiText.LanguageSystem;
+        LanguageEnglishRadio.Content = UiText.LanguageEnglish;
+        LanguageJapaneseRadio.Content = UiText.LanguageJapanese;
         RefreshLabel.Text = UiText.RefreshInterval;
         ShowCursorBox.Content = UiText.ShowCursor;
         ShowCodexBox.Content = UiText.ShowCodex;
@@ -125,30 +131,31 @@ public partial class SettingsWindow : Window
         SaveButton.Content = UiText.Save;
     }
 
-    private void FillLanguageBox(string language)
+    private void SelectLanguage(string language)
     {
-        LanguageBox.Items.Clear();
-        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageSystem, Tag = UiText.SystemLanguage });
-        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageEnglish, Tag = UiText.EnglishLanguage });
-        LanguageBox.Items.Add(new ComboBoxItem { Content = UiText.LanguageJapanese, Tag = UiText.JapaneseLanguage });
         var selected = UiText.NormalizeLanguage(language);
-        foreach (ComboBoxItem item in LanguageBox.Items)
+        LanguageSystemRadio.IsChecked = selected == UiText.SystemLanguage;
+        LanguageEnglishRadio.IsChecked = selected == UiText.EnglishLanguage;
+        LanguageJapaneseRadio.IsChecked = selected == UiText.JapaneseLanguage;
+        if (LanguageSystemRadio.IsChecked != true && LanguageEnglishRadio.IsChecked != true && LanguageJapaneseRadio.IsChecked != true)
         {
-            if (string.Equals(item.Tag as string, selected, StringComparison.Ordinal))
-            {
-                LanguageBox.SelectedItem = item;
-                return;
-            }
+            LanguageSystemRadio.IsChecked = true;
         }
-
-        LanguageBox.SelectedIndex = 0;
     }
 
     private string SelectedLanguage()
     {
-        return LanguageBox.SelectedItem is ComboBoxItem item && item.Tag is string tag
-            ? UiText.NormalizeLanguage(tag)
-            : UiText.SystemLanguage;
+        if (LanguageEnglishRadio.IsChecked == true)
+        {
+            return UiText.EnglishLanguage;
+        }
+
+        if (LanguageJapaneseRadio.IsChecked == true)
+        {
+            return UiText.JapaneseLanguage;
+        }
+
+        return UiText.SystemLanguage;
     }
 
     private static void StyleInput(TextBox field, Brush fg, Brush input, Brush border)
@@ -164,7 +171,7 @@ public partial class SettingsWindow : Window
         try
         {
             var hwnd = new WindowInteropHelper(this).EnsureHandle();
-            var theme = Themes.Current();
+            var theme = _theme;
             WindowChrome.ApplyWin11Surface(hwnd, dark: !theme.Light, rounded: true, mica: true, border: theme.Border);
         }
         catch (Exception)

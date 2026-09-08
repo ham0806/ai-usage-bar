@@ -12,7 +12,7 @@ Windows 11 のタスクバー通知領域の左隣に、Cursor と Codex の使�
 
 ## インストール
 
-[Releases](https://github.com/ham0806/ai-usage-bar/releases) から `AI-Usage-Bar-win-x64.zip` をダウンロードし、フォルダごと展開して `AI Usage Bar.exe` を実行します。exe 単体では動きません。
+[Releases](https://github.com/ham0806/ai-usage-bar/releases) から `AI-Usage-Bar-win-x64.zip` をダウンロードし、展開して `AI Usage Bar.exe` を実行します。
 
 表示言語は Windows の表示言語（英語 / 日本語）に合わせます。設定から上書きできます。
 
@@ -49,7 +49,7 @@ Windows 起動時に始める場合は、ウィジェットの右クリックか
 .\build.ps1
 ```
 
-出力は `dist\AI Usage Bar\AI Usage Bar.exe` です。フォルダごとコピーしてください。exe 単体では動きません。
+出力は `dist\AI Usage Bar\AI Usage Bar.exe` です。
 
 exe から起動しているときは、「Windows 起動時に開始」もその exe を登録します。
 

@@ -2,42 +2,48 @@
 
 Windows 11 のタスクバー通知領域の左隣に、Cursor と Codex の使用量を常時表示します。
 
-表示例は `Cursor 42%  |  Codex 5h 18% · 7d 9%` です。左クリックで詳細、右クリックから更新・設定・終了ができます。
+![タスクバーの使用率](docs/bar.png)
+
+タスクバーにはアイコンと使用率だけを出します。左クリックで内訳・リセット・課金周期などの詳細、右クリックから更新・設定・終了ができます。
+
+![詳細フライアウト](docs/flyout.png)
 
 ## 必要環境
 
 - Windows 11
-- Python 3.12 以降
+- .NET 8 SDK（開発時。`mise install dotnet@8`）
 - Codex を見る場合は、普段使っている `codex login` 済みの環境
 - Cursor を見る場合は、Cursor にログイン済みか、後述のセッショントークン
 
-## セットアップ
-
-プロジェクトフォルダで仮想環境を作り、パッケージを入れます。
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -U pip
-.\.venv\Scripts\pip.exe install -e .
-```
-
 ## 起動
 
-コンソールを出さずに起動するなら `run.ps1` を使います。
+リポジトリで次を実行します。
 
 ```powershell
 .\run.ps1
 ```
 
-ログを見たいときは次です。
+ログを見たいときや、ビルド済み exe がまだ無いときは次です。
 
 ```powershell
-.\.venv\Scripts\python.exe -m ai_usage_bar
+dotnet run --project src\AiUsageBar\AiUsageBar.csproj
 ```
 
 すでに起動している場合は、二重起動せずに終了します。終了はウィジェットを右クリックして「終了」です。
 
 Windows 起動時に始める場合は、ウィジェットの右クリックから設定を開き、「Windows 起動時に開始」をオンにします。
+
+## exe で起動する
+
+.NET を入れていない PC でも、`build.ps1` で作った exe をダブルクリックして起動できます。
+
+```powershell
+.\build.ps1
+```
+
+出力は `dist\AI Usage Bar\AI Usage Bar.exe` です。フォルダごとコピーしてください。exe 単体では動きません。
+
+exe から起動しているときは、「Windows 起動時に開始」もその exe を登録します。
 
 ## Cursor の認証
 
@@ -49,13 +55,30 @@ Windows 起動時に始める場合は、ウィジェットの右クリックか
 
 ## Codex の認証
 
-`%USERPROFILE%\.codex\auth.json`（または環境変数 `CODEX_HOME`）の OAuth を使い、`https://chatgpt.com/backend-api/wham/usage` を呼びます。失敗したときはインストール済みの `codex app-server` に JSON-RPC で `account/rateLimits/read` を投げます。トークンの中身はログに書きません。
+`%USERPROFILE%\.codex\auth.json`（または環境変数 `CODEX_HOME`）の ChatGPT OAuth を使い、期限が近いときは公式 CLI と同じ JSON でトークンを更新して `auth.json` に書き戻します。呼び出し先は `https://chatgpt.com/backend-api/codex/usage` と `https://chatgpt.com/backend-api/wham/usage` です。まだ失敗するときはインストール済みの `codex app-server` に JSON-RPC で `account/rateLimits/read` を投げます。設定の「codex login を開く」からもログインできます。トークンの中身はログに書きません。
 
 ## 設定
 
 `%LOCALAPPDATA%\ai-usage-bar\config.json` に更新間隔と表示対象、位置オフセットを保存します。秘密情報は入れません。ログは `%TEMP%\ai-usage-bar.log` です。
 
 位置が通知領域と重なるときは、設定のオフセット X / Y でずらしてください。
+
+## アイコン
+
+公式ロゴは同梱しません。各自で PNG を用意し、次の名前で置いてください。無いときはアイコンなしで数字だけ出ます。起動中に置いた場合は、次の描画（更新やホバー）で読み込みます。
+
+`%LOCALAPPDATA%\ai-usage-bar\icons\`
+
+- `cursor-dark.png` / `cursor-light.png`
+- `codex-dark.png` / `codex-light.png`
+
+推奨は 64px 前後の正方形です。暗いタスクバーには `-dark`、明るいときは `-light` を使います。これらのファイルはコミットしないでください。
+
+## テスト
+
+```powershell
+dotnet test AiUsageBar.sln
+```
 
 ## 制限
 

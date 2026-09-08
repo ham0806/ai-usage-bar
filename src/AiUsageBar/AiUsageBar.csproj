@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>AI Usage Bar</AssemblyName>
+    <RootNamespace>AiUsageBar</RootNamespace>
+    <Product>AI Usage Bar</Product>
+    <Version>0.1.0</Version>
+    <ApplicationIcon />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiUsageBar.Core\AiUsageBar.Core.csproj" />
+  </ItemGroup>
+
+</Project>

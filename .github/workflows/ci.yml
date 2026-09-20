@@ -3,11 +3,25 @@ name: ci
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - "*.md"
+      - "**/*.md"
+      - "docs/**"
   pull_request:
+    branches: [master]
+    paths-ignore:
+      - "*.md"
+      - "**/*.md"
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 

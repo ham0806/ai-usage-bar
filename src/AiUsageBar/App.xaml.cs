@@ -156,8 +156,6 @@ public partial class App : Application
 
     private void Quit()
     {
-        _poller?.Dispose();
-        _widget?.Dispose();
         _flyout?.Close();
         _settings?.Close();
         Shutdown();

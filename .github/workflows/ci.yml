@@ -1,21 +1,11 @@
 name: ci
 
+# Runs on demand only: tests are executed locally (see test.ps1).
 on:
-  push:
-    branches: [master]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
-  pull_request:
-    branches: [master]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

@@ -10,6 +10,7 @@ public sealed class Poller : IDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly ManualResetEventSlim _wake = new(false);
     private Task? _loop;
+    private bool _disposed;
     private readonly Dictionary<string, double> _nextOk = new() { ["cursor"] = 0, ["codex"] = 0 };
     private readonly Dictionary<string, ProviderSnapshot> _last = [];
 
@@ -40,6 +41,12 @@ public sealed class Poller : IDisposable
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
         Stop();
         _http.Dispose();
         _cts.Dispose();

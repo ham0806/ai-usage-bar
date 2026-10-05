@@ -53,7 +53,7 @@ Windows 起動時に始める場合は、ウィジェットの右クリックか
 
 exe から起動しているときは、「Windows 起動時に開始」もその exe を登録します。
 
-`vX.Y.Z` タグを push すると GitHub Actions がテストと zip 作成を行い、GitHub Release に添付します。
+`vX.Y.Z` タグを push すると GitHub Actions が zip 作成を行い、GitHub Release に添付します。
 
 ## Cursor の認証
 
@@ -86,8 +86,18 @@ exe から起動しているときは、「Windows 起動時に開始」もそ�
 
 ## テスト
 
+テストは push ごとの CI ではなくローカルで実行します。CI ワークフローは **Actions → ci → Run workflow** からの手動実行のみです。
+
 ```powershell
-dotnet test AiUsageBar.sln
+.\test.ps1
+# または
+dotnet test AiUsageBar.sln -c Release
+```
+
+任意の pre-push フックを有効にすると、push 前に同じテストが実行されます。
+
+```powershell
+git config core.hooksPath .githooks
 ```
 
 ## 制限

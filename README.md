@@ -49,7 +49,7 @@ On a PC without .NET, you can still run the exe produced by `build.ps1`.
 
 Output: `dist\AI Usage Bar\AI Usage Bar.exe`. If you started from the exe, **Start with Windows** registers that exe.
 
-Releases are published when a `vX.Y.Z` tag is pushed. GitHub Actions tests, builds the zip, and attaches it to the GitHub Release.
+Releases are published when a `vX.Y.Z` tag is pushed. GitHub Actions builds the zip and attaches it to the GitHub Release.
 
 ## Cursor auth
 
@@ -82,8 +82,18 @@ About 64px square is enough. Use `-dark` on a dark taskbar and `-light` on a lig
 
 ## Tests
 
+Tests run locally, not on every push. The CI workflow runs on demand only (**Actions → ci → Run workflow**).
+
 ```powershell
-dotnet test AiUsageBar.sln
+.\test.ps1
+# or
+dotnet test AiUsageBar.sln -c Release
+```
+
+Optional pre-push hook that runs the same suite before each push:
+
+```powershell
+git config core.hooksPath .githooks
 ```
 
 ## Limits

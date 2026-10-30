@@ -22,9 +22,8 @@ public static class WidgetLayout
             return 120;
         }
 
-        const int padX = 8;
         const int gap = 10;
-        var width = padX;
+        var width = 0;
         for (var index = 0; index < textWidths.Count; index++)
         {
             if (index > 0)
@@ -35,7 +34,6 @@ public static class WidgetLayout
             width += icon + 4 + textWidths[index];
         }
 
-        width += padX;
-        return Math.Min(560, Math.Max(width, 88));
+        return Math.Min(560, width);
     }
 }

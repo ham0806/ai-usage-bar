@@ -5,7 +5,7 @@
              Cursor="Hand"
              SnapsToDevicePixels="True"
              UseLayoutRounding="True">
-    <Border x:Name="HoverBorder" CornerRadius="6" Background="Transparent" Padding="8,0">
-        <StackPanel x:Name="Row" Orientation="Horizontal" VerticalAlignment="Center" />
+    <Border x:Name="HoverBorder" CornerRadius="6" Background="Transparent" Padding="0">
+        <StackPanel x:Name="Row" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" />
     </Border>
 </UserControl>

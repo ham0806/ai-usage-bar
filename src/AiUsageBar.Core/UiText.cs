@@ -1,4 +1,5 @@
 using System.Globalization;
+using AiUsageBar.Core.Auth;
 
 namespace AiUsageBar.Core;
 
@@ -60,9 +61,37 @@ public static class UiText
     public static string Reset => T("resets", "リセット");
     public static string Credits => "Credits";
     public static string CreditsAvailable => T("available", "あり");
+    public static string ExtraUsage => T("Extra usage", "追加利用");
+    public static string CloudMinutes => T("Cloud minutes", "クラウド時間");
+    public static string UsedTotal => T("Total used", "累計使用");
     public static string RangeSeparator => T("~", "～");
     public static string ClickForDetails => T("Click for details", "クリックで詳細");
     public static string NoProviders => T("No providers selected", "表示するプロバイダがありません");
+
+    public static string ProviderHint(string id) => id switch
+    {
+        "cursor" => TokenHint,
+        "codex" => CodexHint,
+        "claude" => ClaudeHint,
+        "opencode" => OpenCodeHint,
+        "commandcode" => CommandCodeHint,
+        _ => "",
+    };
+
+    public static string ProviderTokenLabel(string id) => id switch
+    {
+        "cursor" => SessionToken,
+        "claude" => ClaudeTokenLabel,
+        _ => ApiKeyLabel,
+    };
+
+    public static string ProviderFieldLabel(string credentialUser) => credentialUser switch
+    {
+        CredentialUsers.Cursor => SessionToken,
+        CredentialUsers.Claude => ClaudeTokenLabel,
+        CredentialUsers.OpenCodeCookie => T("Console cookie (optional)", "コンソール Cookie（任意）"),
+        _ => ApiKeyLabel,
+    };
 
     public static string MenuRefresh => T("Refresh now(&R)", "今すぐ更新(&R)");
     public static string MenuSettings => T("Settings(&S)", "設定(&S)");
@@ -76,13 +105,13 @@ public static class UiText
     public static string LanguageEnglish => "English";
     public static string LanguageJapanese => "日本語";
     public static string RefreshInterval => T("Refresh interval (seconds)", "更新間隔（秒）");
-    public static string ShowCursor => T("Show Cursor", "Cursor を表示");
-    public static string ShowCodex => T("Show Codex", "Codex を表示");
+    public static string DisplayProviders => T("Providers", "表示するプロバイダ");
+    public static string MoveUp => T("Move up", "上へ");
+    public static string MoveDown => T("Move down", "下へ");
     public static string StartWithWindows => T("Start with Windows", "Windows 起動時に開始");
     public static string PositionHeader => T("Position", "位置");
     public static string OffsetX => T("Offset X", "オフセット X");
     public static string OffsetY => T("Offset Y", "オフセット Y");
-    public static string CursorAuthHeader => T("Cursor sign-in", "Cursor 認証");
     public static string SessionToken => T("Session token (optional)", "セッショントークン（任意）");
     public static string TokenHint => T(
         "Paste the cursor.com cookie WorkosCursorSessionToken. Leave empty if the local Cursor app can supply it.",
@@ -95,6 +124,54 @@ public static class UiText
     public static string ClearSavedToken => T("Remove saved token", "保存したトークンを削除");
     public static string Cancel => T("Cancel", "キャンセル");
     public static string Save => T("Save", "保存");
+
+    public static string ProviderAuthHeader => T("Sign-in", "認証");
+    public static string ClaudeTokenLabel => T("OAuth token (optional)", "OAuth トークン（任意）");
+    public static string ApiKeyLabel => T("API key (optional)", "API キー（任意）");
+    public static string UsageUrlLabel => T("Usage URL", "使用量 URL");
+    public static string UsageUrlHint => T(
+        "Leave empty for the built-in URL. Set it when you know the endpoint your tool exposes.",
+        "空欄なら組み込みの URL を使います。取得先が分かっている場合だけ入れてください。");
+    public static string OpenCodeWorkspaceLabel => T("Workspace (optional)", "ワークスペース（任意）");
+    public static string OpenCodeWorkspaceHint => T(
+        "Leave empty to detect it from the console sign-in. Paste the URL of your Go page (…/console/wrk_…/go) or the workspace ID when you use several workspaces.",
+        "空欄なら console のサインイン情報から自動で判定します。複数のワークスペースを使う場合は Go ページの URL（…/console/wrk_…/go）かワークスペース ID を貼り付けてください。");
+
+    public static string ClaudeHint => T(
+        "Uses ~/.claude/.credentials.json from Claude Code. Paste the token only when you sign in elsewhere.",
+        "Claude Code の ~/.claude/.credentials.json を使います。別の場所でログインしている場合だけトークンを貼ってください。");
+    public static string OpenCodeHint => T(
+        "Sign in with the button below to get a console session. The Go limits come from the workspace selected in the console. If sign-in fails, paste the console session cookie (DevTools → Network → Request Headers → Cookie).",
+        "下のボタンで console のセッションを取得します。Go の上限は console で選んでいるワークスペースから読みます。うまくいかない場合は console のセッション Cookie を貼り付けてください（DevTools → Network → Request Headers → Cookie）。");
+    public static string CommandCodeHint => T(
+        "Uses ~/.commandcode/auth.json from commandcode login. Paste an API key when you have not signed in on this PC.",
+        "commandcode login の ~/.commandcode/auth.json を使います。この PC でログインしていないときは API キーを貼ってください。");
+
+    public static string ClaudeAuthHint => T(
+        "Sign in with Claude Code, or paste the OAuth token in Settings.",
+        "Claude Code でログインするか、設定から OAuth トークンを貼り付けてください");
+    public static string OpenCodeAuthHint => T(
+        "Sign in to the opencode console, then paste the console cookie in Settings.",
+        "opencode console にログインし、設定へコンソール Cookie を貼り付けてください");
+    public static string CommandCodeAuthHint => T(
+        "Run commandcode login, or paste the API key in Settings.",
+        "commandcode login を実行するか、設定から API キーを貼り付けてください");
+    public static string OpenCodeFetchFailedMessage => T(
+        "Could not fetch usage. Check the usage URL and API key in Settings.",
+        "取得に失敗しました。設定の使用量 URL と API キーを確認してください");
+    public static string OpenCodeEndpointHint => T(
+        "The usage URL does not exist. Set the real endpoint in Settings.",
+        "使用量 URL が存在しません。設定で実際の取得先を指定してください");
+    public static string OpenCodeSignIn => T("Sign in to opencode", "opencode にサインイン");
+    public static string OpenCodeSignInStarted(string code) => T(
+        $"Approve this sign-in in the browser.\n\nCode: {code}",
+        $"ブラウザでこのサインインを承認してください。\n\nコード: {code}");
+    public static string OpenCodeSignInDone => T(
+        "Signed in to the opencode console.",
+        "opencode console にサインインしました。");
+    public static string OpenCodeSignInFailed => T(
+        "Could not sign in to the opencode console.",
+        "opencode console にサインインできませんでした。");
 
     public static string AlreadyRunning => T(
         "AI Usage Bar is already running.",
@@ -128,6 +205,7 @@ public static class UiText
         ProviderErrors.RateLimited => RateLimitedShort,
         ProviderErrors.FetchFailed => FetchFailed,
         ProviderErrors.Unparsed => Unparsed,
+        ProviderErrors.EndpointMissing => T("No endpoint", "URL 未設定"),
         _ => string.IsNullOrEmpty(error) ? "--" : error,
     };
 
@@ -141,8 +219,13 @@ public static class UiText
         "1d" => T("1d", "1日"),
         "30d" => T("30d", "30日"),
         "1y" => T("1y", "1年"),
+        "Rolling" => T("Rolling", "ローリング"),
+        "Weekly" => T("Weekly", "週次"),
+        "Monthly" => T("Monthly", "月次"),
         _ => label,
     };
+
+    public static string StartsOnFirstUse => T("starts on first use", "初回使用で開始");
 
     public static string ResetInDaysHours(int days, int hours) =>
         T($"in {days}d {hours}h", $"{days}日{hours}時間後");
@@ -173,4 +256,25 @@ public static class UiText
     public static string CreditsUnlimited => Labeled(Credits, Unlimited);
 
     public static string CreditsPresent => Labeled(Credits, CreditsAvailable);
+
+    public static string Requests => T("Requests", "リクエスト");
+    public static string Cost => T("Cost", "コスト");
+    public static string Tokens => T("Tokens", "トークン");
+    public static string Cache => T("Cache", "キャッシュ");
+
+    public static string LastDays(int days) => T($"Last {days} days", $"直近{days}日");
+
+    /// <summary>1,234 のような桁区切り。</summary>
+    public static string Count(double value) => value.ToString("#,0", CultureInfo.InvariantCulture);
+
+    /// <summary>12.3M / 456K のような短い表現。</summary>
+    public static string CompactCount(double value) => value switch
+    {
+        >= 1_000_000_000 => $"{value / 1_000_000_000:0.#}B",
+        >= 1_000_000 => $"{value / 1_000_000:0.#}M",
+        >= 1_000 => $"{value / 1_000:0.#}K",
+        _ => value.ToString("0", CultureInfo.InvariantCulture),
+    };
+
+    public static string Money(double value) => "$" + value.ToString("0.00", CultureInfo.InvariantCulture);
 }

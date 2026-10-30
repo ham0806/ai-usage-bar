@@ -6,38 +6,42 @@ namespace AiUsageBar.Core.Auth;
 public static class CredentialStore
 {
     public const string Service = "ai-usage-bar";
-    public const string CursorTokenUser = "cursor-session-token";
+    public const string CursorTokenUser = CredentialUsers.Cursor;
 
-    public static string? GetCursorToken()
+    public static string? GetCursorToken() => GetToken(CursorTokenUser);
+
+    public static void SetCursorToken(string? token) => SetToken(CursorTokenUser, token);
+
+    public static string? GetToken(string user)
     {
         try
         {
-            var value = GetPassword(Service, CursorTokenUser);
+            var value = GetPassword(Service, user);
             var text = value?.Trim();
             return string.IsNullOrEmpty(text) ? null : text;
         }
         catch (Exception)
         {
-            AppLog.Warning("Credential Manager から Cursor トークンを読めませんでした");
+            AppLog.Warning($"Credential Manager から {user} のトークンを読めませんでした");
             return null;
         }
     }
 
-    public static void SetCursorToken(string? token)
+    public static void SetToken(string user, string? token)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(token))
             {
-                DeletePassword(Service, CursorTokenUser);
+                DeletePassword(Service, user);
                 return;
             }
 
-            SetPassword(Service, CursorTokenUser, token.Trim());
+            SetPassword(Service, user, token.Trim());
         }
         catch (Exception)
         {
-            AppLog.Warning("Credential Manager へ Cursor トークンを保存できませんでした");
+            AppLog.Warning($"Credential Manager へ {user} のトークンを保存できませんでした");
         }
     }
 

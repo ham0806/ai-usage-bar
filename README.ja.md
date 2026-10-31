@@ -12,7 +12,7 @@ Windows 11 のタスクバー通知領域の左隣に、AI コーディングツ
 
 ## インストール
 
-[Releases](https://github.com/ham0806/ai-usage-bar/releases) から `AI-Usage-Bar-win-x64.zip` をダウンロードし、展開して `AI Usage Bar.exe` を実行します。
+[Releases](https://github.com/ham0806/ai-usage-bar/releases) から `AI-Usage-Bar.exe` をダウンロードして実行します。
 
 表示言語は Windows の表示言語（英語 / 日本語）に合わせます。設定から上書きできます。
 
@@ -55,7 +55,7 @@ Windows 起動時に始める場合は、ウィジェットの右クリックか
 
 exe から起動しているときは、「Windows 起動時に開始」もその exe を登録します。
 
-`vX.Y.Z` タグを push すると GitHub Actions が zip 作成を行い、GitHub Release に添付します。
+`vX.Y.Z` タグを push すると GitHub Actions が exe を作成し、GitHub Release に添付します。
 
 ## Cursor の認証
 

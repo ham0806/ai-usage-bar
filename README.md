@@ -12,7 +12,7 @@ The bar shows icons and percentages only. Left-click opens details such as break
 
 ## Install
 
-Download `AI-Usage-Bar-win-x64.zip` from [Releases](https://github.com/ham0806/ai-usage-bar/releases). Extract it and run `AI Usage Bar.exe`.
+Download `AI-Usage-Bar.exe` from [Releases](https://github.com/ham0806/ai-usage-bar/releases) and run it.
 
 The UI follows the Windows display language (English or Japanese). Override it in Settings if needed.
 
@@ -51,7 +51,7 @@ On a PC without .NET, you can still run the exe produced by `build.ps1`.
 
 Output: `dist\AI Usage Bar\AI Usage Bar.exe`. If you started from the exe, **Start with Windows** registers that exe.
 
-Releases are published when a `vX.Y.Z` tag is pushed. GitHub Actions builds the zip and attaches it to the GitHub Release.
+Releases are published when a `vX.Y.Z` tag is pushed. GitHub Actions builds the exe and attaches it to the GitHub Release.
 
 ## Cursor auth
 

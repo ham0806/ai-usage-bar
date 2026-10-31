@@ -24,12 +24,7 @@ jobs:
         run: |
           $version = $env:GITHUB_REF_NAME.Substring(1)
           ./build.ps1 -Version $version
-          if (Test-Path AI-Usage-Bar-win-x64.zip) {
-            Remove-Item AI-Usage-Bar-win-x64.zip
-          }
-          Compress-Archive -Path "dist\AI Usage Bar\AI Usage Bar.exe" -DestinationPath "AI-Usage-Bar-win-x64.zip"
-          $hash = (Get-FileHash "AI-Usage-Bar-win-x64.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
-          Set-Content -Path SHA256SUMS.txt -Value "$hash  AI-Usage-Bar-win-x64.zip" -Encoding ascii
+          Copy-Item "dist\AI Usage Bar\AI Usage Bar.exe" "AI-Usage-Bar.exe"
 
       - name: Create GitHub Release
         env:
@@ -37,7 +32,6 @@ jobs:
         shell: pwsh
         run: |
           gh release create $env:GITHUB_REF_NAME `
-            "AI-Usage-Bar-win-x64.zip" `
-            "SHA256SUMS.txt" `
+            "AI-Usage-Bar.exe" `
             --title "AI Usage Bar $env:GITHUB_REF_NAME" `
             --generate-notes

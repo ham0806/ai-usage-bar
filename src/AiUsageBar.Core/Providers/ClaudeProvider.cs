@@ -95,7 +95,7 @@ public static class ClaudeProvider
         foreach (var window in windows)
         {
             var reset = Formatting.FormatReset(window.ResetsAt, updated);
-            var percent = window.RemainingPercent is null ? "--" : Formatting.Percent(window.RemainingPercent.Value);
+            var percent = window.RemainingPercent is null ? "--" : Formatting.PercentRemaining(window.RemainingPercent.Value);
             var when = window.ResetsAt is null ? "" : UiText.ParentheticalTime(window.ResetsAt.Value.ToLocalTime().ToString("MM/dd HH:mm"));
             lines.Add(UiText.WindowDetail(window.Label, percent, reset, when));
         }
@@ -108,7 +108,7 @@ public static class ClaudeProvider
         lines.Add(UiText.Labeled(UiText.LastUpdated, updated.ToLocalTime().ToString("HH:mm:ss")));
         var metrics = windows.Select(window =>
         {
-            var remaining = window.RemainingPercent is null ? null : UiText.RemainingHint(Formatting.Percent(window.RemainingPercent.Value));
+            var remaining = window.RemainingPercent is null ? null : UiText.RemainingHint(Formatting.PercentRemaining(window.RemainingPercent.Value));
             var reset = window.ResetsAt is null ? null : UiText.ResetHint(Formatting.FormatReset(window.ResetsAt, updated));
             var hint = string.Join(" · ", new[] { remaining, reset }.Where(part => !string.IsNullOrEmpty(part)));
             return new UsageMetric(window.Label, window.UsedPercent, string.IsNullOrEmpty(hint) ? null : hint);

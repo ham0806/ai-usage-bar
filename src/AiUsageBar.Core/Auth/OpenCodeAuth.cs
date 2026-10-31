@@ -204,13 +204,29 @@ public static class OpenCodeAuth
             return null;
         }
 
-        var expiresIn = Formatting.Number(payload, "expires_in");
+        var expiresIn = Formatting.NumberOrString(payload, "expires_in", "expiresIn");
+        DateTimeOffset? expiresAt = expiresIn is null
+            ? null
+            : Formatting.UtcNow().AddSeconds(expiresIn.Value);
+        if (expiresAt is null)
+        {
+            // SaveSession は expires_at（Unix 秒）で保存する。再起動後も期限を見て更新する。
+            foreach (var key in new[] { "expires_at", "expiresAt" })
+            {
+                if (payload.TryGetProperty(key, out var value) && Formatting.ParseTimestamp(value) is { } parsed)
+                {
+                    expiresAt = parsed;
+                    break;
+                }
+            }
+        }
+
         var workspace = OpenCodeProvider.NormalizeWorkspaceId(
             Formatting.PickStr(payload, "org_id", "orgId", "workspace_id", "workspaceId"));
         return new OpenCodeSession(
             access,
             Formatting.PickStr(payload, "refresh_token"),
-            expiresIn is null ? null : Formatting.UtcNow().AddSeconds(expiresIn.Value),
+            expiresAt,
             workspace);
     }
 

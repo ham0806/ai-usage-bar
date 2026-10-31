@@ -20,6 +20,8 @@ public partial class SettingsWindow : Window
     private readonly Dictionary<string, TextBox> _usageUrlBoxes = new(StringComparer.Ordinal);
     private readonly List<FrameworkElement> _authControls = [];
     private TextBox? _openCodeWorkspaceBox;
+    private Button? _openCodeSignInButton;
+    private CancellationTokenSource? _openCodeSignInCts;
 
     public SettingsWindow(AppConfig config, Action<AppConfig> onSave)
         : this(config, onSave, Themes.Current())
@@ -67,6 +69,7 @@ public partial class SettingsWindow : Window
             };
             timer.Start();
         };
+        Closed += (_, _) => _openCodeSignInCts?.Cancel();
     }
 
     private sealed record ProviderRow(CheckBox CheckBox, Button Up, Button Down, DockPanel Panel);
@@ -243,34 +246,69 @@ public partial class SettingsWindow : Window
     /// </summary>
     private async void SignInOpenCode(object sender, RoutedEventArgs e)
     {
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
-        var code = await OpenCodeAuth.RequestDeviceCodeAsync(http, CancellationToken.None);
-        if (code is null)
+        if (_openCodeSignInCts is not null)
         {
-            WindowChrome.MessageBox(UiText.OpenCodeSignInFailed, "AI Usage Bar");
             return;
         }
 
-        var polling = OpenCodeAuth.PollDeviceTokenAsync(http, code, CancellationToken.None);
+        var cts = new CancellationTokenSource();
+        _openCodeSignInCts = cts;
+        if (_openCodeSignInButton is not null)
+        {
+            _openCodeSignInButton.IsEnabled = false;
+        }
+
         try
         {
-            Process.Start(new ProcessStartInfo { FileName = code.VerificationUrl, UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            AppLog.Warning($"opencode のサインイン ページを開けませんでした ({ex.GetType().Name})");
-        }
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+            var code = await OpenCodeAuth.RequestDeviceCodeAsync(http, cts.Token);
+            if (code is null)
+            {
+                if (!cts.IsCancellationRequested)
+                {
+                    WindowChrome.MessageBox(UiText.OpenCodeSignInFailed, "AI Usage Bar");
+                }
 
-        WindowChrome.MessageBox(UiText.OpenCodeSignInStarted(code.UserCode), "AI Usage Bar");
-        var session = await polling;
-        if (session is null)
-        {
-            WindowChrome.MessageBox(UiText.OpenCodeSignInFailed, "AI Usage Bar");
-            return;
-        }
+                return;
+            }
 
-        OpenCodeAuth.SaveSession(session);
-        WindowChrome.MessageBox(UiText.OpenCodeSignInDone, "AI Usage Bar");
+            var polling = OpenCodeAuth.PollDeviceTokenAsync(http, code, cts.Token);
+            try
+            {
+                Process.Start(new ProcessStartInfo { FileName = code.VerificationUrl, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                AppLog.Warning($"opencode のサインイン ページを開けませんでした ({ex.GetType().Name})");
+            }
+
+            WindowChrome.MessageBox(UiText.OpenCodeSignInStarted(code.UserCode), "AI Usage Bar");
+            var session = await polling;
+            if (session is null)
+            {
+                if (!cts.IsCancellationRequested)
+                {
+                    WindowChrome.MessageBox(UiText.OpenCodeSignInFailed, "AI Usage Bar");
+                }
+
+                return;
+            }
+
+            OpenCodeAuth.SaveSession(session);
+            WindowChrome.MessageBox(UiText.OpenCodeSignInDone, "AI Usage Bar");
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            _openCodeSignInCts = null;
+            cts.Dispose();
+            if (_openCodeSignInButton is not null)
+            {
+                _openCodeSignInButton.IsEnabled = true;
+            }
+        }
     }
 
     private void LoginProvider(string providerId)
@@ -400,6 +438,7 @@ public partial class SettingsWindow : Window
                     HorizontalAlignment = HorizontalAlignment.Left,
                 };
                 signIn.Click += SignInOpenCode;
+                _openCodeSignInButton = signIn;
                 _authControls.Add(signIn);
                 AuthPanel.Children.Add(signIn);
             }

@@ -54,8 +54,27 @@ public static class OpenCodeProvider
             }
 
             var token = session?.AccessToken ?? apiKey;
-            var workspaces = await ResolveWorkspacesAsync(http, options, cookie, token, session, cancellationToken).ConfigureAwait(false);
+            var workspaces = ResolveWorkspaces(options, session, token).ToList();
             var limits = await TryFetchGoLimitsAsync(http, options, cookie, token, workspaces, cancellationToken).ConfigureAwait(false);
+            if (limits.Payload is not { } firstLimits || CollectGoMeters(firstLimits).Count == 0)
+            {
+                // セッションの workspace が Go 非対応・古い場合に備え、一覧から候補を追加する。
+                var discovered = await TryFetchWorkspacesAsync(http, options, cookie, token, cancellationToken).ConfigureAwait(false);
+                var extra = discovered
+                    .Where(id => !workspaces.Contains(id, StringComparer.Ordinal))
+                    .ToList();
+                if (extra.Count > 0)
+                {
+                    AppLog.Info($"OpenCode のワークスペースを追加で試します {extra.Count} 件");
+                    workspaces.AddRange(extra);
+                    var retry = await TryFetchGoLimitsAsync(http, options, cookie, token, extra, cancellationToken).ConfigureAwait(false);
+                    if (retry.Payload is not null)
+                    {
+                        limits = retry;
+                    }
+                }
+            }
+
             var workspace = limits.Payload is not null ? limits.Workspace : workspaces.FirstOrDefault();
             // Limits が読めたら summary は取りに行かない。取れないときだけ従来の集計 API に戻す。
             var payload = limits.Payload is { } limitsPayload && CollectGoMeters(limitsPayload).Count > 0
@@ -200,28 +219,15 @@ public static class OpenCodeProvider
     private sealed record GoLimitsResult(JsonElement? Payload, string? Workspace);
 
     /// <summary>
-    /// 設定値 → セッションの org_id → アクセストークンの claim → ワークスペース一覧、の順で候補を作る。
+    /// 設定値 → セッションの org_id → アクセストークンの claim、の順で候補を作る。
+    /// 候補で Go limits が読めないときだけ、後段でワークスペース一覧を取りに行く。
     /// </summary>
-    private static async Task<IReadOnlyList<string>> ResolveWorkspacesAsync(
-        HttpClient http,
-        ProviderOptions options,
-        string? cookie,
-        string? token,
-        OpenCodeSession? session,
-        CancellationToken cancellationToken)
+    private static IReadOnlyList<string> ResolveWorkspaces(ProviderOptions options, OpenCodeSession? session, string? token)
     {
         var workspaces = new List<string>();
         AddWorkspace(workspaces, options.OpenCodeWorkspaceId);
         AddWorkspace(workspaces, session?.WorkspaceId);
         AddWorkspace(workspaces, WorkspaceFromToken(token));
-        if (workspaces.Count == 0)
-        {
-            foreach (var workspace in await TryFetchWorkspacesAsync(http, options, cookie, token, cancellationToken).ConfigureAwait(false))
-            {
-                AddWorkspace(workspaces, workspace);
-            }
-        }
-
         if (workspaces.Count > 0)
         {
             AppLog.Info($"OpenCode のワークスペース候補 {workspaces.Count} 件");
@@ -366,7 +372,12 @@ public static class OpenCodeProvider
                 fallback ??= payload;
                 fallbackWorkspace ??= workspace;
             }
-            catch (Exception ex) when (ex is FetchException or AuthRequiredException or RateLimitedException or EndpointMissingException)
+            catch (RateLimitedException)
+            {
+                // 429 のあとに別 workspace を叩くと悪化するので、ここで打ち切る。
+                throw;
+            }
+            catch (Exception ex) when (ex is FetchException or AuthRequiredException or EndpointMissingException)
             {
                 AppLog.Info($"OpenCode の Limits は取得できませんでした workspace={workspace ?? "(default)"}: {ex.Message}");
             }
@@ -420,6 +431,12 @@ public static class OpenCodeProvider
         if (text.StartsWith("Cookie:", StringComparison.OrdinalIgnoreCase))
         {
             text = text["Cookie:".Length..].Trim();
+        }
+
+        if (text.Any(ch => ch is '\r' or '\n'))
+        {
+            AppLog.Warning("OpenCode の Cookie に改行が含まれているため使いません");
+            return null;
         }
 
         return string.IsNullOrEmpty(text) ? null : text;

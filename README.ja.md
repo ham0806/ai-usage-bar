@@ -79,7 +79,7 @@ exe から起動しているときは、「Windows 起動時に開始」もそ�
 
 設定の「opencode にサインイン」を押すと、CLI と同じ device 認証（`/console/auth/device/code`）で console のセッションを取得して資格情報マネージャーに保存します。うまくいかないときは、console のセッション Cookie を設定に貼ってください（DevTools → Network → `usage/summary` → Request Headers → `Cookie`）。
 
-表示は console の Limits パネルと同じです。`GET /console/api/go/status` の `access.meters`（`fiveHour` / `week` / `month`）から Rolling / Weekly / Monthly の使用率とリセット時刻を出します。バーは 5時間（Rolling）の使用率で、フライアウトに 3 つの枠を並べます。使用率は小数を切り上げて整数で表示します。リクエスト数・トークン・コスト・日別履歴は取得も表示もしません。
+表示は console の Limits パネルと同じです。`GET /console/api/go/status` の `access.meters`（`fiveHour` / `week` / `month`）から Rolling / Weekly / Monthly の使用率とリセット時刻を出します。バーは 5時間（Rolling）の使用率で、フライアウトに 3 つの枠を並べます。使用率は小数を切り上げて整数で表示します。リクエスト数・トークン・コスト・日別履歴は表示しません。Go の Limits が取れないときだけ、従来の usage summary にフォールバックします。
 
 これらの API は console で選んでいるワークスペース単位で、`x-org-id` が必要です。ワークスペースは device 認証の `org_id`、トークン、または `GET /console/api/user/workspaces` から決めます。複数のワークスペースがあるときは、設定の「ワークスペース」に Go ページの URL（`https://opencode.ai/console/wrk_…/go`）かワークスペース ID を貼ってください。
 

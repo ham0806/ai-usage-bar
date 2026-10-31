@@ -29,7 +29,7 @@ public partial class BarControl : UserControl
         var fontSize = fontPx * dipScale;
         Background = BrushFrom(fill);
         HoverBorder.Background = BrushFrom(hover ? Themes.HoverFill(fill) : fill);
-        HoverBorder.Padding = new Thickness(0);
+        HoverBorder.Padding = new Thickness(8 * dipScale, 0, 8 * dipScale, 0);
         ToolTip = snapshots.Count == 0
             ? "AI Usage Bar"
             : string.Join("  |  ", snapshots.Select(item => $"{item.Title} {Formatting.ShortMetric(item)}")) + "\n" + UiText.ClickForDetails;

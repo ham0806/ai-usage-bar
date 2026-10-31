@@ -14,23 +14,14 @@ internal static class WindowReader
             return null;
         }
 
-        var direct = Formatting.Number(obj, "used_percent")
-            ?? Formatting.Number(obj, "usedPercent")
-            ?? Formatting.Number(obj, "utilization")
-            ?? Formatting.Number(obj, "percent")
-            ?? Formatting.Number(obj, "percentage");
+        var direct = Formatting.NumberOrString(obj, "used_percent", "usedPercent", "utilization", "percent", "percentage");
         if (direct is not null)
         {
             return Math.Clamp(direct.Value, 0, 100);
         }
 
-        var used = Formatting.Number(obj, "used")
-            ?? Formatting.Number(obj, "usage")
-            ?? Formatting.Number(obj, "consumed");
-        var cap = Formatting.Number(obj, "cap")
-            ?? Formatting.Number(obj, "limit")
-            ?? Formatting.Number(obj, "total")
-            ?? Formatting.Number(obj, "quota");
+        var used = Formatting.NumberOrString(obj, "used", "usage", "consumed");
+        var cap = Formatting.NumberOrString(obj, "cap", "limit", "total", "quota");
         if (used is not null && cap is > 0)
         {
             return Math.Clamp(used.Value / cap.Value * 100.0, 0, 100);

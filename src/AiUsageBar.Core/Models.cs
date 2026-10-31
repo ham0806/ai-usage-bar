@@ -14,7 +14,7 @@ public sealed record RateWindow(
 
     public string Compact() => RemainingPercent is null
         ? $"{Label} --"
-        : $"{Label} {Formatting.Percent(RemainingPercent.Value)}";
+        : $"{Label} {Formatting.PercentRemaining(RemainingPercent.Value)}";
 }
 
 public sealed record UsageMetric(
@@ -53,6 +53,18 @@ public static class Formatting
 
         // 使用率は小数を切り上げて整数で出す（0.1% でも 1%）。
         return $"{Math.Ceiling(value).ToString("0", CultureInfo.InvariantCulture)}%";
+    }
+
+    /// <summary>
+    /// 残り％は切り上げない。切り上げると「残り 99.1%」が 100% になり、
+    /// 実際より余裕があるように見えるため従来どおり丸める。
+    /// </summary>
+    public static string PercentRemaining(double value)
+    {
+        value = Math.Clamp(value, 0, 100);
+        return Math.Abs(value - Math.Round(value)) < 0.05
+            ? $"{Math.Round(value).ToString("0", CultureInfo.InvariantCulture)}%"
+            : $"{value.ToString("0.0", CultureInfo.InvariantCulture)}%";
     }
 
     public static DateTimeOffset UtcNow() => DateTimeOffset.UtcNow;

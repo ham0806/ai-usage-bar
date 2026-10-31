@@ -83,7 +83,7 @@ public static class CommandCodeProvider
         foreach (var window in windows)
         {
             var reset = Formatting.FormatReset(window.ResetsAt, updated);
-            var percent = window.RemainingPercent is null ? "--" : Formatting.Percent(window.RemainingPercent.Value);
+            var percent = window.RemainingPercent is null ? "--" : Formatting.PercentRemaining(window.RemainingPercent.Value);
             var when = window.ResetsAt is null ? "" : UiText.ParentheticalTime(window.ResetsAt.Value.ToLocalTime().ToString("MM/dd HH:mm"));
             lines.Add(UiText.WindowDetail(window.Label, percent, reset, when));
         }
@@ -137,9 +137,9 @@ public static class CommandCodeProvider
 
     private static double? RemainingCredits(JsonElement credits)
     {
-        var monthly = Formatting.Number(credits, "monthlyCredits") ?? Formatting.Number(credits, "monthly_credits");
-        var purchased = Formatting.Number(credits, "purchasedCredits") ?? Formatting.Number(credits, "purchased_credits");
-        var free = Formatting.Number(credits, "freeCredits") ?? Formatting.Number(credits, "free_credits");
+        var monthly = Formatting.NumberOrString(credits, "monthlyCredits", "monthly_credits");
+        var purchased = Formatting.NumberOrString(credits, "purchasedCredits", "purchased_credits");
+        var free = Formatting.NumberOrString(credits, "freeCredits", "free_credits");
         var total = (monthly ?? 0) + (purchased ?? 0) + (free ?? 0);
         return monthly is null && purchased is null && free is null ? null : Math.Max(0, total);
     }
@@ -152,8 +152,8 @@ public static class CommandCodeProvider
             return null;
         }
 
-        var used = Formatting.Number(sandbox, "usedMinutes") ?? Formatting.Number(sandbox, "used_minutes");
-        var limit = Formatting.Number(sandbox, "limitMinutes") ?? Formatting.Number(sandbox, "limit_minutes");
+        var used = Formatting.NumberOrString(sandbox, "usedMinutes", "used_minutes");
+        var limit = Formatting.NumberOrString(sandbox, "limitMinutes", "limit_minutes");
         if (used is null && limit is null)
         {
             return null;

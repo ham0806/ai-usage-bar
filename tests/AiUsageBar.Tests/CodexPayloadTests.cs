@@ -40,11 +40,11 @@ public class CodexPayloadTests
         using var doc = JsonDocument.Parse(json);
         using var _ = new UiCulture("ja-JP");
         var snapshot = CodexProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
-        Assert.Equal("Codex 5h 82% · 7d 91%", snapshot.Compact);
+        Assert.Equal("Codex 5h 81.8% · 7d 91%", snapshot.Compact);
         Assert.Equal("19%", Formatting.ShortMetric(snapshot));
-        Assert.Contains("5h  残り 82%", snapshot.Lines[1]);
+        Assert.Contains("5h  残り 81.8%", snapshot.Lines[1]);
         Assert.Equal("5h", snapshot.MetricList[0].Label);
-        Assert.Contains("残り 82%", snapshot.MetricList[0].Hint);
+        Assert.Contains("残り 81.8%", snapshot.MetricList[0].Hint);
         Assert.Equal(18.2, snapshot.UsedPercent);
     }
 

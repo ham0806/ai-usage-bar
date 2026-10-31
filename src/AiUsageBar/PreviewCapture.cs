@@ -93,7 +93,10 @@ internal static class PreviewCapture
         const int icon = 20;
         const int fontPx = 15;
         var textWidths = snapshots.Select(item => BarControl.MeasureTextPx(Formatting.ShortMetric(item), fontPx, 96)).ToList();
-        var width = WidgetLayout.Width(textWidths, icon);
+        var iconWidths = snapshots
+            .Select(item => ProviderIconFiles.Resolve(item.ProviderId, theme.Light) is null ? 0 : icon)
+            .ToList();
+        var width = WidgetLayout.Width(textWidths, iconWidths);
         var bar = new BarControl
         {
             Width = width,

@@ -463,4 +463,21 @@ public class ProviderAuthTests
         Assert.Equal("refresh", session.RefreshToken);
         Assert.Equal("wrk_01TESTWORKSPACE0000000000", session.WorkspaceId);
     }
+
+    [Fact]
+    public void SavedSessionExpiryIsRestoredForRefresh()
+    {
+        using var doc = JsonDocument.Parse("""
+            {
+              "access_token": "access",
+              "refresh_token": "refresh",
+              "expires_at": 1999999999,
+              "org_id": "wrk_01TESTWORKSPACE0000000000"
+            }
+            """);
+        var session = OpenCodeAuth.SessionFrom(doc.RootElement);
+        Assert.NotNull(session);
+        Assert.Equal(DateTimeOffset.FromUnixTimeSeconds(1999999999), session!.ExpiresAt);
+        Assert.True(OpenCodeAuth.NeedsRefresh(session, DateTimeOffset.FromUnixTimeSeconds(1999999999 - 60)));
+    }
 }

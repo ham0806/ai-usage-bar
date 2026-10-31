@@ -15,15 +15,23 @@ public static class WidgetLayout
         return Math.Max(11, Math.Min(height - 16, fromHeight));
     }
 
-    public static int Width(IReadOnlyList<int> textWidths, int icon)
+    public static int Width(IReadOnlyList<int> textWidths, int icon) =>
+        Width(textWidths, textWidths.Select(_ => icon).ToList());
+
+    /// <summary>
+    /// アイコンが無いプロバイダは幅を空けない。iconWidths は 0 ならアイコン無し。
+    /// </summary>
+    public static int Width(IReadOnlyList<int> textWidths, IReadOnlyList<int> iconWidths)
     {
         if (textWidths.Count == 0)
         {
             return 120;
         }
 
+        const int padX = 8;
         const int gap = 10;
-        var width = 0;
+        const int iconGap = 4;
+        var width = padX;
         for (var index = 0; index < textWidths.Count; index++)
         {
             if (index > 0)
@@ -31,9 +39,16 @@ public static class WidgetLayout
                 width += gap;
             }
 
-            width += icon + 4 + textWidths[index];
+            var icon = index < iconWidths.Count ? iconWidths[index] : 0;
+            if (icon > 0)
+            {
+                width += icon + iconGap;
+            }
+
+            width += textWidths[index];
         }
 
-        return Math.Min(560, width);
+        width += padX;
+        return Math.Min(560, Math.Max(width, 88));
     }
 }

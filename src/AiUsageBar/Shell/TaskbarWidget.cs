@@ -204,7 +204,10 @@ public sealed class TaskbarWidget : IDisposable
         else
         {
             var textWidths = _snapshots.Select(item => BarControl.MeasureTextPx(Formatting.ShortMetric(item), fontPx, _dpi)).ToList();
-            width = WidgetLayout.Width(textWidths, icon);
+            var iconWidths = _snapshots
+                .Select(item => ProviderIconFiles.Resolve(item.ProviderId, _theme.Light) is null ? 0 : icon)
+                .ToList();
+            width = WidgetLayout.Width(textWidths, iconWidths);
         }
 
         _pixelWidth = width;

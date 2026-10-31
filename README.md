@@ -75,7 +75,7 @@ Usage comes from the console API (`GET https://opencode.ai/console/api/usage/sum
 
 **Sign in to opencode** in Settings runs the same device flow as the CLI (`/console/auth/device/code`) and stores the console session in Windows Credential Manager. If that fails, paste the console session cookie instead (DevTools → Network → `usage/summary` → Request Headers → `Cookie`).
 
-The numbers mirror the console's Limits panel. `GET /console/api/go/status` gives `access.meters` (`fiveHour` / `week` / `month`). The bar shows the 5-hour (Rolling) usage, and the flyout lists Rolling / Weekly / Monthly usage and reset times. Percentages are rounded up to whole numbers. Requests, tokens, cost, and daily history are not fetched or shown.
+The numbers mirror the console's Limits panel. `GET /console/api/go/status` gives `access.meters` (`fiveHour` / `week` / `month`). The bar shows the 5-hour (Rolling) usage, and the flyout lists Rolling / Weekly / Monthly usage and reset times. Usage percentages are rounded up to whole numbers. Requests, tokens, cost, and daily history are not shown; the legacy usage summary is fetched only when the Go limits endpoint is unavailable.
 
 These endpoints are scoped to the workspace you selected in the console and need `x-org-id`. The app takes the workspace from the device sign-in (`org_id`), the token, or `GET /console/api/user/workspaces`. With several workspaces, paste the Go page URL (`https://opencode.ai/console/wrk_…/go`) or the workspace ID in Settings → Workspace.
 

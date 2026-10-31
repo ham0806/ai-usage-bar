@@ -14,7 +14,7 @@ public sealed record RateWindow(
 
     public string Compact() => RemainingPercent is null
         ? $"{Label} --"
-        : $"{Label} {Formatting.Percent(RemainingPercent.Value)}";
+        : $"{Label} {Formatting.PercentRemaining(RemainingPercent.Value)}";
 }
 
 public sealed record UsageMetric(
@@ -51,6 +51,17 @@ public static class Formatting
             value = 999;
         }
 
+        // 使用率は小数を切り上げて整数で出す（0.1% でも 1%）。
+        return $"{Math.Ceiling(value).ToString("0", CultureInfo.InvariantCulture)}%";
+    }
+
+    /// <summary>
+    /// 残り％は切り上げない。切り上げると「残り 99.1%」が 100% になり、
+    /// 実際より余裕があるように見えるため従来どおり丸める。
+    /// </summary>
+    public static string PercentRemaining(double value)
+    {
+        value = Math.Clamp(value, 0, 100);
         return Math.Abs(value - Math.Round(value)) < 0.05
             ? $"{Math.Round(value).ToString("0", CultureInfo.InvariantCulture)}%"
             : $"{value.ToString("0.0", CultureInfo.InvariantCulture)}%";
@@ -283,6 +294,38 @@ public static class Formatting
         return obj.ValueKind == JsonValueKind.Object && obj.TryGetProperty(key, out var value)
             ? Number(value)
             : null;
+    }
+
+    /// <summary>
+    /// 数値でも数字文字列でも読む。マイクロセントのような大きい整数を文字列で返す API があるため。
+    /// </summary>
+    public static double? NumberOrString(JsonElement obj, params string[] keys)
+    {
+        if (obj.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        foreach (var key in keys)
+        {
+            if (!obj.TryGetProperty(key, out var value))
+            {
+                continue;
+            }
+
+            if (Number(value) is { } number)
+            {
+                return number;
+            }
+
+            if (value.ValueKind == JsonValueKind.String
+                && double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+            {
+                return parsed;
+            }
+        }
+
+        return null;
     }
 
     public static JsonElement? Object(JsonElement parent, string key)

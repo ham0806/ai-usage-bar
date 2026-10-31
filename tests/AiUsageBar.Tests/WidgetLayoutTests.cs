@@ -34,6 +34,8 @@ public class WidgetLayoutTests
         Assert.Equal(120, WidgetLayout.Width([], 20));
         Assert.Equal(88, WidgetLayout.Width([28], 20));
         Assert.Equal(142, WidgetLayout.Width([28, 40], 20));
+        Assert.Equal(88, WidgetLayout.Width([28], [0]));
+        Assert.Equal(118, WidgetLayout.Width([28, 40], [20, 0]));
     }
 
     [Fact]

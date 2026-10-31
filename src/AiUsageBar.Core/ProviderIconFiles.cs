@@ -2,11 +2,8 @@ namespace AiUsageBar.Core;
 
 public static class ProviderIconFiles
 {
-    public static string FileName(string providerId, bool light)
-    {
-        var prefix = providerId == "codex" ? "codex" : "cursor";
-        return light ? $"{prefix}-light.png" : $"{prefix}-dark.png";
-    }
+    public static string FileName(string providerId, bool light) =>
+        $"{(string.IsNullOrWhiteSpace(providerId) ? "provider" : providerId.Trim().ToLowerInvariant())}-{(light ? "light" : "dark")}.png";
 
     public static string? Resolve(string providerId, bool light, string? directory = null)
     {

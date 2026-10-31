@@ -12,3 +12,4 @@ output/
 src/AiUsageBar/Assets/*.png
 __pycache__/
 *.pyc
+mitm_mcp_traffic.db

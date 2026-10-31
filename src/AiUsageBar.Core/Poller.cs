@@ -11,8 +11,8 @@ public sealed class Poller : IDisposable
     private readonly ManualResetEventSlim _wake = new(false);
     private Task? _loop;
     private bool _disposed;
-    private readonly Dictionary<string, double> _nextOk = new() { ["cursor"] = 0, ["codex"] = 0 };
-    private readonly Dictionary<string, ProviderSnapshot> _last = [];
+    private readonly Dictionary<string, double> _nextOk = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ProviderSnapshot> _last = new(StringComparer.Ordinal);
 
     public Poller(Func<AppConfig> getConfig, Action<IReadOnlyList<ProviderSnapshot>> onUpdate)
     {
@@ -34,8 +34,7 @@ public sealed class Poller : IDisposable
 
     public void RefreshNow()
     {
-        _nextOk["cursor"] = 0;
-        _nextOk["codex"] = 0;
+        _nextOk.Clear();
         _wake.Set();
     }
 
@@ -83,41 +82,50 @@ public sealed class Poller : IDisposable
     private async Task<List<ProviderSnapshot>> CollectAsync(CancellationToken cancellationToken)
     {
         var config = _getConfig();
+        var options = ProviderOptions.From(config);
+        var enabled = config.EnabledProviders;
         var now = Environment.TickCount64 / 1000.0;
         var snapshots = new List<ProviderSnapshot>();
-        if (config.ShowCursor)
+        foreach (var provider in config.ProviderOrder)
         {
-            snapshots.Add(await FetchOneAsync("cursor", now, () => CursorProvider.FetchAsync(_http, cancellationToken)).ConfigureAwait(false));
-        }
+            if (!enabled.Contains(provider, StringComparer.Ordinal))
+            {
+                continue;
+            }
 
-        if (config.ShowCodex)
-        {
-            snapshots.Add(await FetchOneAsync("codex", now, () => CodexProvider.FetchAsync(_http, cancellationToken)).ConfigureAwait(false));
+            var definition = ProviderRegistry.Find(provider);
+            if (definition is null)
+            {
+                continue;
+            }
+
+            snapshots.Add(await FetchOneAsync(definition, options, now, cancellationToken).ConfigureAwait(false));
         }
 
         return snapshots;
     }
 
-    private async Task<ProviderSnapshot> FetchOneAsync(string key, double now, Func<Task<ProviderSnapshot>> fetcher)
+    private async Task<ProviderSnapshot> FetchOneAsync(
+        ProviderDefinition definition,
+        ProviderOptions options,
+        double now,
+        CancellationToken cancellationToken)
     {
-        if (now < _nextOk[key] && _last.TryGetValue(key, out var cached))
+        if (_nextOk.TryGetValue(definition.Id, out var next) && now < next && _last.TryGetValue(definition.Id, out var cached))
         {
             return cached;
         }
 
-        var snapshot = await fetcher().ConfigureAwait(false);
-        _last[key] = snapshot;
-        var delay = 0.0;
-        if (snapshot.Error == ProviderErrors.RateLimited)
+        var snapshot = await definition.Fetch(_http, options, cancellationToken).ConfigureAwait(false);
+        _last[definition.Id] = snapshot;
+        var delay = snapshot.Error switch
         {
-            delay = 300;
-        }
-        else if (snapshot.Error == ProviderErrors.AuthRequired)
-        {
-            delay = 180;
-        }
+            ProviderErrors.RateLimited => 300.0,
+            ProviderErrors.AuthRequired => 180.0,
+            _ => 0.0,
+        };
 
-        _nextOk[key] = Environment.TickCount64 / 1000.0 + delay;
+        _nextOk[definition.Id] = Environment.TickCount64 / 1000.0 + delay;
         return snapshot;
     }
 }

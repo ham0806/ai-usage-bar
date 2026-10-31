@@ -57,11 +57,14 @@ public class ConfigAndAuthTests
     }
 
     [Fact]
-    public void PercentFormattingMatchesPython()
+    public void PercentFormattingRoundsUp()
     {
         Assert.Equal("42%", Formatting.Percent(42));
-        Assert.Equal("18.5%", Formatting.Percent(18.5));
+        Assert.Equal("19%", Formatting.Percent(18.5));
+        Assert.Equal("1%", Formatting.Percent(0.1));
         Assert.Equal("0%", Formatting.Percent(-3));
+        Assert.Equal("81.8%", Formatting.PercentRemaining(81.8));
+        Assert.Equal("99.1%", Formatting.PercentRemaining(99.1));
     }
 
     [Fact]

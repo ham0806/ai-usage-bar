@@ -23,3 +23,13 @@ public class FetchException : Exception
     {
     }
 }
+
+/// <summary>
+/// 取得先 URL が存在しない（404/405）。設定の URL が未確定なときに使う。
+/// </summary>
+public class EndpointMissingException : Exception
+{
+    public EndpointMissingException(string message) : base(message)
+    {
+    }
+}

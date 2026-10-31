@@ -41,7 +41,7 @@ public class CodexPayloadTests
         using var _ = new UiCulture("ja-JP");
         var snapshot = CodexProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
         Assert.Equal("Codex 5h 81.8% · 7d 91%", snapshot.Compact);
-        Assert.Equal("18.2%", Formatting.ShortMetric(snapshot));
+        Assert.Equal("19%", Formatting.ShortMetric(snapshot));
         Assert.Contains("5h  残り 81.8%", snapshot.Lines[1]);
         Assert.Equal("5h", snapshot.MetricList[0].Label);
         Assert.Contains("残り 81.8%", snapshot.MetricList[0].Hint);
@@ -151,13 +151,13 @@ public class CursorPayloadTests
             """;
         using var doc = JsonDocument.Parse(json);
         var snapshot = CursorProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
-        Assert.Equal("Cursor Auto 42% · API 18.5%", snapshot.Compact);
+        Assert.Equal("Cursor Auto 42% · API 19%", snapshot.Compact);
         Assert.Equal("42%", Formatting.ShortMetric(snapshot));
         Assert.Equal("pro", snapshot.Subtitle);
         Assert.Equal("Auto", snapshot.MetricList[0].Label);
         Assert.Equal(42, snapshot.MetricList[0].UsedPercent);
         Assert.Contains("Auto  42%", snapshot.Lines);
-        Assert.Contains("API  18.5%", snapshot.Lines);
+        Assert.Contains("API  19%", snapshot.Lines);
         Assert.Equal(42, snapshot.UsedPercent);
     }
 

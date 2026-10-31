@@ -56,10 +56,34 @@ internal static class PreviewCapture
               }
             }
             """);
+        using var claude = JsonDocument.Parse($$"""
+            {
+              "five_hour": { "utilization": 24, "resets_at": {{now.AddHours(2).ToUnixTimeSeconds()}} },
+              "seven_day": { "utilization": 46, "resets_at": {{now.AddDays(3).ToUnixTimeSeconds()}} }
+            }
+            """);
+        using var commandCode = JsonDocument.Parse($$"""
+            {
+              "credits": {
+                "planId": "goat",
+                "monthlyCredits": 8.4,
+                "purchasedCredits": 2,
+                "freeCredits": 0,
+                "windowLimits": {
+                  "fiveHour": { "used": 3, "cap": 20, "resetAt": {{now.AddHours(1).ToUnixTimeSeconds()}} },
+                  "weekly": { "used": 12, "cap": 60, "resetAt": {{now.AddDays(2).ToUnixTimeSeconds()}} }
+                }
+              }
+            }
+            """);
+        using var openCode = JsonDocument.Parse("""{ "balance": 12.34, "total_used": 41.2 }""");
         return
         [
             CursorProvider.FromPayload(cursor.RootElement, now),
             CodexProvider.FromPayload(codex.RootElement, now),
+            ClaudeProvider.FromPayload(claude.RootElement, now),
+            CommandCodeProvider.FromPayload(commandCode.RootElement, null, now),
+            OpenCodeProvider.FromPayload(openCode.RootElement, now),
         ];
     }
 
@@ -69,7 +93,10 @@ internal static class PreviewCapture
         const int icon = 20;
         const int fontPx = 15;
         var textWidths = snapshots.Select(item => BarControl.MeasureTextPx(Formatting.ShortMetric(item), fontPx, 96)).ToList();
-        var width = WidgetLayout.Width(textWidths, icon);
+        var iconWidths = snapshots
+            .Select(item => ProviderIconFiles.Resolve(item.ProviderId, theme.Light) is null ? 0 : icon)
+            .ToList();
+        var width = WidgetLayout.Width(textWidths, iconWidths);
         var bar = new BarControl
         {
             Width = width,

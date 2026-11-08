@@ -12,6 +12,11 @@ public class LocalizationTests
         Assert.Equal("system", UiText.NormalizeLanguage(""));
         Assert.Equal("en", UiText.NormalizeLanguage("EN"));
         Assert.Equal("ja", UiText.NormalizeLanguage("ja-JP"));
+        Assert.Equal("zh-CN", UiText.NormalizeLanguage("zh-Hans"));
+        Assert.Equal("es", UiText.NormalizeLanguage("es-MX"));
+        Assert.Equal("pt-BR", UiText.NormalizeLanguage("pt-BR"));
+        Assert.Equal("de", UiText.NormalizeLanguage("de-DE"));
+        Assert.Equal("system", UiText.NormalizeLanguage("zh-TW"));
         Assert.Equal("system", UiText.NormalizeLanguage("fr"));
     }
 
@@ -20,7 +25,10 @@ public class LocalizationTests
     {
         Assert.Equal("ja", new AppConfig { Language = "ja-JP" }.Normalized().Language);
         Assert.Equal("en", new AppConfig { Language = "en" }.Normalized().Language);
-        Assert.Equal("system", new AppConfig { Language = "de" }.Normalized().Language);
+        Assert.Equal("zh-CN", new AppConfig { Language = "zh-Hans" }.Normalized().Language);
+        Assert.Equal("es", new AppConfig { Language = "es" }.Normalized().Language);
+        Assert.Equal("pt-BR", new AppConfig { Language = "pt-BR" }.Normalized().Language);
+        Assert.Equal("de", new AppConfig { Language = "de" }.Normalized().Language);
     }
 
     [Fact]
@@ -57,6 +65,56 @@ public class LocalizationTests
     }
 
     [Fact]
+    public void EveryLocalizationHasFourLanguages()
+    {
+        foreach (var pair in Localizations.Text.Concat(Localizations.Formats))
+        {
+            Assert.Equal(4, pair.Value.Length);
+            Assert.All(pair.Value, value => Assert.False(string.IsNullOrWhiteSpace(value)));
+        }
+    }
+
+    [Fact]
+    public void AddedLanguageStringsAreTranslated()
+    {
+        using (new UiCulture("zh-CN"))
+        {
+            Assert.Equal("设置", UiText.SettingsTitle);
+            Assert.Equal("5小时", Formatting.WindowLabel("5h"));
+            Assert.Equal("2天3小时后", Formatting.FormatReset(
+                DateTimeOffset.UnixEpoch.AddDays(2).AddHours(3),
+                DateTimeOffset.UnixEpoch));
+        }
+
+        using (new UiCulture("es"))
+        {
+            Assert.Equal("Configuración", UiText.SettingsTitle);
+            Assert.Equal("5 h", Formatting.WindowLabel("5h"));
+            Assert.Equal("en 2 d 3 h", Formatting.FormatReset(
+                DateTimeOffset.UnixEpoch.AddDays(2).AddHours(3),
+                DateTimeOffset.UnixEpoch));
+        }
+
+        using (new UiCulture("pt-BR"))
+        {
+            Assert.Equal("Configurações", UiText.SettingsTitle);
+            Assert.Equal("5 h", Formatting.WindowLabel("5h"));
+            Assert.Equal("em 2 d 3 h", Formatting.FormatReset(
+                DateTimeOffset.UnixEpoch.AddDays(2).AddHours(3),
+                DateTimeOffset.UnixEpoch));
+        }
+
+        using (new UiCulture("de-DE"))
+        {
+            Assert.Equal("Einstellungen", UiText.SettingsTitle);
+            Assert.Equal("5 Std.", Formatting.WindowLabel("5h"));
+            Assert.Equal("in 2 T. 3 Std.", Formatting.FormatReset(
+                DateTimeOffset.UnixEpoch.AddDays(2).AddHours(3),
+                DateTimeOffset.UnixEpoch));
+        }
+    }
+
+    [Fact]
     public void ApplySwitchesDefaultThreadUiCulture()
     {
         var previousUi = CultureInfo.CurrentUICulture;
@@ -67,6 +125,14 @@ public class LocalizationTests
             Assert.Equal("en", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
             UiText.Apply("ja");
             Assert.Equal("ja", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            UiText.Apply("zh-CN");
+            Assert.Equal("zh", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            UiText.Apply("es");
+            Assert.Equal("es", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            UiText.Apply("pt-BR");
+            Assert.Equal("pt", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            UiText.Apply("de");
+            Assert.Equal("de", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
         }
         finally
         {

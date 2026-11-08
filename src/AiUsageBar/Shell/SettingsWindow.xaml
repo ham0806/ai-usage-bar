@@ -21,6 +21,10 @@
                 <RadioButton x:Name="LanguageSystemRadio" GroupName="Language" Margin="0,4" />
                 <RadioButton x:Name="LanguageEnglishRadio" GroupName="Language" Margin="0,4" />
                 <RadioButton x:Name="LanguageJapaneseRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguageChineseRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguageSpanishRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguagePortugueseRadio" GroupName="Language" Margin="0,4" />
+                <RadioButton x:Name="LanguageGermanRadio" GroupName="Language" Margin="0,4" />
                 <DockPanel Margin="0,4">
                     <TextBlock x:Name="RefreshLabel" Text="Refresh interval (seconds)" VerticalAlignment="Center" />
                     <TextBox x:Name="RefreshBox" Width="80" HorizontalAlignment="Right" />

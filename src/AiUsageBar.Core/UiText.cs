@@ -8,11 +8,61 @@ public static class UiText
     public const string SystemLanguage = "system";
     public const string EnglishLanguage = "en";
     public const string JapaneseLanguage = "ja";
+    public const string ChineseLanguage = "zh-CN";
+    public const string SpanishLanguage = "es";
+    public const string PortugueseLanguage = "pt-BR";
+    public const string GermanLanguage = "de";
 
     private static readonly CultureInfo SystemUiCulture = CultureInfo.CurrentUICulture;
 
-    public static bool IsJapanese =>
-        CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("ja", StringComparison.OrdinalIgnoreCase);
+    public static bool IsJapanese => CurrentLanguage == JapaneseLanguage;
+
+    private static string CurrentLanguage
+    {
+        get
+        {
+            var name = CultureInfo.CurrentUICulture.Name;
+            if (name.Equals("ja", StringComparison.OrdinalIgnoreCase) || name.StartsWith("ja-", StringComparison.OrdinalIgnoreCase))
+            {
+                return JapaneseLanguage;
+            }
+
+            // 今回は簡体字のみ対応。繁体字は英語にフォールバックする。
+            if (name.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
+                && !name.Contains("tw", StringComparison.OrdinalIgnoreCase)
+                && !name.Contains("hk", StringComparison.OrdinalIgnoreCase)
+                && !name.Contains("hant", StringComparison.OrdinalIgnoreCase))
+            {
+                return ChineseLanguage;
+            }
+
+            if (name.StartsWith("es", StringComparison.OrdinalIgnoreCase))
+            {
+                return SpanishLanguage;
+            }
+
+            if (name.StartsWith("pt", StringComparison.OrdinalIgnoreCase))
+            {
+                return PortugueseLanguage;
+            }
+
+            if (name.StartsWith("de", StringComparison.OrdinalIgnoreCase))
+            {
+                return GermanLanguage;
+            }
+
+            return EnglishLanguage;
+        }
+    }
+
+    private static int CurrentLanguageIndex => CurrentLanguage switch
+    {
+        ChineseLanguage => 0,
+        SpanishLanguage => 1,
+        PortugueseLanguage => 2,
+        GermanLanguage => 3,
+        _ => -1,
+    };
 
     public static void Apply(string? language)
     {
@@ -28,10 +78,16 @@ public static class UiText
             return SystemLanguage;
         }
 
-        var value = language.Trim().ToLowerInvariant();
-        return value is EnglishLanguage or JapaneseLanguage or "ja-jp" or "en-us"
-            ? value is "ja-jp" ? JapaneseLanguage : value is "en-us" ? EnglishLanguage : value
-            : SystemLanguage;
+        return language.Trim().ToLowerInvariant() switch
+        {
+            "en" or "en-us" or "en-gb" => EnglishLanguage,
+            "ja" or "ja-jp" => JapaneseLanguage,
+            "zh" or "zh-cn" or "zh-hans" or "zh-sg" => ChineseLanguage,
+            "es" or "es-es" or "es-419" or "es-mx" => SpanishLanguage,
+            "pt" or "pt-br" or "pt-pt" => PortugueseLanguage,
+            "de" or "de-de" or "de-at" or "de-ch" => GermanLanguage,
+            _ => SystemLanguage,
+        };
     }
 
     public static CultureInfo Resolve(string? language)
@@ -40,11 +96,43 @@ public static class UiText
         {
             EnglishLanguage => CultureInfo.GetCultureInfo("en"),
             JapaneseLanguage => CultureInfo.GetCultureInfo("ja-JP"),
+            ChineseLanguage => CultureInfo.GetCultureInfo("zh-CN"),
+            SpanishLanguage => CultureInfo.GetCultureInfo("es"),
+            PortugueseLanguage => CultureInfo.GetCultureInfo("pt-BR"),
+            GermanLanguage => CultureInfo.GetCultureInfo("de-DE"),
             _ => SystemUiCulture,
         };
     }
 
-    public static string T(string english, string japanese) => IsJapanese ? japanese : english;
+    public static string T(string english, string japanese) => CurrentLanguage switch
+    {
+        JapaneseLanguage => japanese,
+        EnglishLanguage => english,
+        _ => Translate(english),
+    };
+
+    private static string Translate(string english)
+    {
+        var index = CurrentLanguageIndex;
+        return index >= 0
+            && Localizations.Text.TryGetValue(english, out var values)
+            && index < values.Length
+                ? values[index]
+                : english;
+    }
+
+    private static string TFormat(string english, string japanese, params object[] args)
+    {
+        var template = CurrentLanguage switch
+        {
+            JapaneseLanguage => japanese,
+            EnglishLanguage => english,
+            _ when Localizations.Formats.TryGetValue(english, out var values) && CurrentLanguageIndex < values.Length
+                => values[CurrentLanguageIndex],
+            _ => english,
+        };
+        return string.Format(CultureInfo.InvariantCulture, template, args);
+    }
 
     public static string AuthRequired => T("Sign in", "要認証");
     public static string RateLimitedShort => T("Rate limit", "レート制限");
@@ -59,7 +147,7 @@ public static class UiText
     public static string LastUpdated => T("Updated", "最終更新");
     public static string Remaining => T("left", "残り");
     public static string Reset => T("resets", "リセット");
-    public static string Credits => "Credits";
+    public static string Credits => T("Credits", "クレジット");
     public static string CreditsAvailable => T("available", "あり");
     public static string ExtraUsage => T("Extra usage", "追加利用");
     public static string CloudMinutes => T("Cloud minutes", "クラウド時間");
@@ -104,6 +192,10 @@ public static class UiText
     public static string LanguageSystem => T("Match Windows", "Windows に合わせる");
     public static string LanguageEnglish => "English";
     public static string LanguageJapanese => "日本語";
+    public static string LanguageChinese => "简体中文";
+    public static string LanguageSpanish => "Español";
+    public static string LanguagePortuguese => "Português (Brasil)";
+    public static string LanguageGerman => "Deutsch";
     public static string RefreshInterval => T("Refresh interval (seconds)", "更新間隔（秒）");
     public static string DisplayProviders => T("Providers", "表示するプロバイダ");
     public static string MoveUp => T("Move up", "上へ");
@@ -163,9 +255,10 @@ public static class UiText
         "The usage URL does not exist. Set the real endpoint in Settings.",
         "使用量 URL が存在しません。設定で実際の取得先を指定してください");
     public static string OpenCodeSignIn => T("Sign in to opencode", "opencode にサインイン");
-    public static string OpenCodeSignInStarted(string code) => T(
-        $"Approve this sign-in in the browser.\n\nCode: {code}",
-        $"ブラウザでこのサインインを承認してください。\n\nコード: {code}");
+    public static string OpenCodeSignInStarted(string code) => TFormat(
+        "Approve this sign-in in the browser.\n\nCode: {0}",
+        "ブラウザでこのサインインを承認してください。\n\nコード: {0}",
+        code);
     public static string OpenCodeSignInDone => T(
         "Signed in to the opencode console.",
         "opencode console にサインインしました。");
@@ -228,21 +321,21 @@ public static class UiText
     public static string StartsOnFirstUse => T("starts on first use", "初回使用で開始");
 
     public static string ResetInDaysHours(int days, int hours) =>
-        T($"in {days}d {hours}h", $"{days}日{hours}時間後");
+        TFormat("in {0}d {1}h", "{0}日{1}時間後", days, hours);
 
     public static string ResetInHoursMinutes(int hours, int minutes) =>
-        T($"in {hours}h {minutes}m", $"{hours}時間{minutes}分後");
+        TFormat("in {0}h {1}m", "{0}時間{1}分後", hours, minutes);
 
     public static string ResetInMinutes(int minutes) =>
-        T($"in {minutes}m", $"{minutes}分後");
+        TFormat("in {0}m", "{0}分後", minutes);
 
     public static string UsedOfLimit(double used, double limit) => $"{used:0}/{limit:0}";
 
     public static string UsedOfLimitSuffix(double used, double limit) =>
-        T($" ({used:0}/{limit:0})", $"（{used:0}/{limit:0}）");
+        TFormat(" ({0}/{1})", "（{0}/{1}）", used.ToString("0"), limit.ToString("0"));
 
     public static string ParentheticalTime(string text) =>
-        T($" ({text})", $"（{text}）");
+        TFormat(" ({0})", "（{0}）", text);
 
     public static string Labeled(string label, string value) => $"{label}  {value}";
 
@@ -262,7 +355,7 @@ public static class UiText
     public static string Tokens => T("Tokens", "トークン");
     public static string Cache => T("Cache", "キャッシュ");
 
-    public static string LastDays(int days) => T($"Last {days} days", $"直近{days}日");
+    public static string LastDays(int days) => TFormat("Last {0} days", "直近{0}日", days);
 
     /// <summary>1,234 のような桁区切り。</summary>
     public static string Count(double value) => value.ToString("#,0", CultureInfo.InvariantCulture);

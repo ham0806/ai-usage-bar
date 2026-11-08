@@ -104,7 +104,17 @@ public partial class SettingsWindow : Window
             box.Background = Brushes.Transparent;
         }
 
-        foreach (Control check in new Control[] { StartupBox, LanguageSystemRadio, LanguageEnglishRadio, LanguageJapaneseRadio })
+        foreach (Control check in new Control[]
+                 {
+                     StartupBox,
+                     LanguageSystemRadio,
+                     LanguageEnglishRadio,
+                     LanguageJapaneseRadio,
+                     LanguageChineseRadio,
+                     LanguageSpanishRadio,
+                     LanguagePortugueseRadio,
+                     LanguageGermanRadio,
+                 })
         {
             check.Foreground = fg;
         }
@@ -164,6 +174,10 @@ public partial class SettingsWindow : Window
         LanguageSystemRadio.Content = UiText.LanguageSystem;
         LanguageEnglishRadio.Content = UiText.LanguageEnglish;
         LanguageJapaneseRadio.Content = UiText.LanguageJapanese;
+        LanguageChineseRadio.Content = UiText.LanguageChinese;
+        LanguageSpanishRadio.Content = UiText.LanguageSpanish;
+        LanguagePortugueseRadio.Content = UiText.LanguagePortuguese;
+        LanguageGermanRadio.Content = UiText.LanguageGerman;
         RefreshLabel.Text = UiText.RefreshInterval;
         DisplayProvidersLabel.Text = UiText.DisplayProviders;
         StartupBox.Content = UiText.StartWithWindows;
@@ -188,7 +202,17 @@ public partial class SettingsWindow : Window
         LanguageSystemRadio.IsChecked = selected == UiText.SystemLanguage;
         LanguageEnglishRadio.IsChecked = selected == UiText.EnglishLanguage;
         LanguageJapaneseRadio.IsChecked = selected == UiText.JapaneseLanguage;
-        if (LanguageSystemRadio.IsChecked != true && LanguageEnglishRadio.IsChecked != true && LanguageJapaneseRadio.IsChecked != true)
+        LanguageChineseRadio.IsChecked = selected == UiText.ChineseLanguage;
+        LanguageSpanishRadio.IsChecked = selected == UiText.SpanishLanguage;
+        LanguagePortugueseRadio.IsChecked = selected == UiText.PortugueseLanguage;
+        LanguageGermanRadio.IsChecked = selected == UiText.GermanLanguage;
+        if (LanguageSystemRadio.IsChecked != true
+            && LanguageEnglishRadio.IsChecked != true
+            && LanguageJapaneseRadio.IsChecked != true
+            && LanguageChineseRadio.IsChecked != true
+            && LanguageSpanishRadio.IsChecked != true
+            && LanguagePortugueseRadio.IsChecked != true
+            && LanguageGermanRadio.IsChecked != true)
         {
             LanguageSystemRadio.IsChecked = true;
         }
@@ -204,6 +228,26 @@ public partial class SettingsWindow : Window
         if (LanguageJapaneseRadio.IsChecked == true)
         {
             return UiText.JapaneseLanguage;
+        }
+
+        if (LanguageChineseRadio.IsChecked == true)
+        {
+            return UiText.ChineseLanguage;
+        }
+
+        if (LanguageSpanishRadio.IsChecked == true)
+        {
+            return UiText.SpanishLanguage;
+        }
+
+        if (LanguagePortugueseRadio.IsChecked == true)
+        {
+            return UiText.PortugueseLanguage;
+        }
+
+        if (LanguageGermanRadio.IsChecked == true)
+        {
+            return UiText.GermanLanguage;
         }
 
         return UiText.SystemLanguage;

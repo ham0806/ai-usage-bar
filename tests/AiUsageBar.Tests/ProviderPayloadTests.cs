@@ -75,13 +75,33 @@ public class CommandCodePayloadTests
         using var doc = JsonDocument.Parse(Payload);
         using var _ = new UiCulture("ja-JP");
         var snapshot = CommandCodeProvider.FromPayload(doc.RootElement, null, DateTimeOffset.UnixEpoch);
-        Assert.Equal("Command Code 5h 85% · 7d 80%", snapshot.Compact);
-        Assert.Equal(20, snapshot.UsedPercent);
+        Assert.Equal("Command Code $10.40", snapshot.Compact);
+        Assert.Equal("$10.40", Formatting.ShortMetric(snapshot));
+        Assert.Null(snapshot.UsedPercent);
         Assert.Equal("goat", snapshot.Subtitle);
         Assert.Contains("Command Code  goat", snapshot.Lines);
-        Assert.Contains("Credits  $10.40", snapshot.Lines);
+        Assert.Contains("クレジット  $10.40", snapshot.Lines);
         Assert.Equal(2, snapshot.MetricList.Count);
         Assert.Equal("5h", snapshot.MetricList[0].Label);
+    }
+
+    [Fact]
+    public void UsesWindowPercentWhenCreditsAreMissing()
+    {
+        using var doc = JsonDocument.Parse("""
+            {
+              "credits": {
+                "windowLimits": {
+                  "fiveHour": { "used": 3, "cap": 20 },
+                  "weekly": { "used": 12, "cap": 60 }
+                }
+              }
+            }
+            """);
+        var snapshot = CommandCodeProvider.FromPayload(doc.RootElement, null, DateTimeOffset.UnixEpoch);
+        Assert.Equal("Command Code 5h 85% · 7d 80%", snapshot.Compact);
+        Assert.Equal(20, snapshot.UsedPercent);
+        Assert.Equal("20%", Formatting.ShortMetric(snapshot));
     }
 
     [Fact]
@@ -115,7 +135,7 @@ public class OpenCodePayloadTests
         var snapshot = OpenCodeProvider.FromPayload(doc.RootElement, DateTimeOffset.UnixEpoch);
         Assert.Equal("OpenCode Go $12.34", snapshot.Compact);
         Assert.Equal("$12.34", Formatting.ShortMetric(snapshot));
-        Assert.Contains("Credits  $12.34", snapshot.Lines);
+        Assert.Contains("クレジット  $12.34", snapshot.Lines);
         Assert.Null(snapshot.UsedPercent);
     }
 

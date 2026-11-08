@@ -65,14 +65,15 @@ public static class CommandCodeProvider
         var plan = Formatting.PickStr(credits, "planId", "plan_id")
             ?? (subscription is { } sub ? Formatting.PickStr(sub, "planId", "plan_id") : null);
 
+        // OpenCode と同じく、残高が読めるときは金額を主表示にする。
         var compactParts = new List<string> { "Command Code" };
-        if (windows.Count > 0)
-        {
-            compactParts.Add(string.Join(" · ", windows.Select(item => item.Compact())));
-        }
-        else if (remaining is not null)
+        if (remaining is not null)
         {
             compactParts.Add(Money(remaining.Value));
+        }
+        else if (windows.Count > 0)
+        {
+            compactParts.Add(string.Join(" · ", windows.Select(item => item.Compact())));
         }
         else
         {
@@ -107,6 +108,8 @@ public static class CommandCodeProvider
         }).ToList();
 
         var usedPercents = windows.Select(item => item.UsedPercent).Where(value => value is not null).Select(value => value!.Value).ToList();
+        // バーの数字は残高（$）に合わせる。残高が無いときだけ使用率に戻す。
+        var primaryPercent = remaining is null && usedPercents.Count > 0 ? usedPercents.Max() : (double?)null;
         var ok = windows.Count > 0 || remaining is not null;
         return new ProviderSnapshot(
             "commandcode",
@@ -116,7 +119,7 @@ public static class CommandCodeProvider
             lines,
             ok ? null : ProviderErrors.Unparsed,
             updated,
-            usedPercents.Count > 0 ? usedPercents.Max() : null,
+            primaryPercent,
             plan,
             metrics);
     }

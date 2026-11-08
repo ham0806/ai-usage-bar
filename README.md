@@ -1,12 +1,16 @@
 # AI Usage Bar
 
+[![ci](https://github.com/ham0806/ai-usage-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/ham0806/ai-usage-bar/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/ham0806/ai-usage-bar)](https://github.com/ham0806/ai-usage-bar/releases)
+[![license](https://img.shields.io/github/license/ham0806/ai-usage-bar)](LICENSE)
+
 English | [日本語](README.ja.md)
 
 Shows usage for Cursor, Codex, Claude, OpenCode Go, and Command Code on the Windows 11 taskbar, just left of the notification area. Pick which providers to show in Settings.
 
 ![Taskbar usage](docs/bar.png)
 
-The bar shows icons and percentages only. Left-click opens details such as breakdown, reset time, and billing cycle. Right-click has Refresh, Settings, and Exit.
+The bar shows icons and percentages, or the balance for providers like OpenCode Go and Command Code. Left-click opens details such as breakdown, reset time, and billing cycle. Right-click has Refresh, Settings, and Exit.
 
 ![Details flyout](docs/flyout.png)
 
@@ -14,7 +18,7 @@ The bar shows icons and percentages only. Left-click opens details such as break
 
 Download `AI-Usage-Bar.exe` from [Releases](https://github.com/ham0806/ai-usage-bar/releases) and run it.
 
-The UI follows the Windows display language (English or Japanese). Override it in Settings if needed.
+The UI follows the Windows display language (English, Japanese, Simplified Chinese, Spanish, Brazilian Portuguese, or German). Override it in Settings if needed.
 
 ## Requirements
 
@@ -81,7 +85,7 @@ These endpoints are scoped to the workspace you selected in the console and need
 
 ## Command Code auth
 
-Uses the token from `%USERPROFILE%\.commandcode\auth.json` (or `COMMANDCODE_HOME`), `COMMAND_CODE_API_KEY`, or the API key pasted in Settings, in that order. `GET https://api.commandcode.ai/alpha/billing/credits` gives the 5-hour and weekly limits plus the credit balance, and `/alpha/billing/subscriptions` gives the plan name. Without a sign-in, run `commandcode login` or paste an API key.
+Uses the token from `%USERPROFILE%\.commandcode\auth.json` (or `COMMANDCODE_HOME`), `COMMAND_CODE_API_KEY`, or the API key pasted in Settings, in that order. `GET https://api.commandcode.ai/alpha/billing/credits` gives the 5-hour and weekly limits plus the credit balance, and `/alpha/billing/subscriptions` gives the plan name. The bar shows the credit balance, and the flyout adds the 5-hour and weekly usage. Without a sign-in, run `commandcode login` or paste an API key.
 
 ## Settings
 
@@ -103,9 +107,27 @@ Official logos are not bundled. Place your own PNGs with these names. Without th
 
 About 64px square is enough. Use `-dark` on a dark taskbar and `-light` on a light one. Do not commit these files.
 
+## Architecture
+
+Two projects, both `net8.0-windows`:
+
+```text
+src/AiUsageBar          WPF shell: taskbar widget, flyout, settings window, icon loading
+src/AiUsageBar.Core     UI-free core: providers, auth, polling, layout math, Win32 interop
+tests/AiUsageBar.Tests  xUnit tests, all against the core (no WPF)
+```
+
+`AiUsageBar.Core` has no WPF reference, so everything in it is testable without opening a window.
+
+- A provider under `Providers/` is a static class that resolves its own credential through `Auth/`, maps the API response into `Models.cs`, and raises `ProviderErrors` on failure. `ProviderRegistry.All` is the single list the settings window renders from, so adding a provider means adding one entry there.
+- `Poller` owns the refresh loop and the per-provider backoff. `WidgetLayout` computes bar geometry as pure functions, which is why the payload, layout and localization tests run headless.
+- The overlay is Win32 (`Win32/Taskbar.cs`): locate the notification area, then host a child HWND beside it. `Win32/Fullscreen.cs` hides the bar while a fullscreen window is in the foreground.
+
+Spacing, typography and color rules live in [DESIGN.md](DESIGN.md).
+
 ## Tests
 
-Tests run locally, not on every push. The CI workflow runs on demand only (**Actions → ci → Run workflow**).
+`ci` runs `dotnet test` on every push to `master` and on pull requests.
 
 ```powershell
 .\test.ps1
@@ -122,3 +144,7 @@ git config core.hooksPath .githooks
 ## Limits
 
 Overlaying the taskbar is not a documented Windows API. Position can drift after a major Windows update. Browser cookies are not extracted automatically because of Chrome App-Bound Encryption.
+
+## License
+
+[MIT](LICENSE) © 2026 ham0806

@@ -1,7 +1,11 @@
 name: ci
 
-# Runs on demand only: tests are executed locally (see test.ps1).
+# Runs on every push to master and on pull requests.
+# Actions minutes are free for public repositories.
 on:
+  push:
+    branches: [master]
+  pull_request:
   workflow_dispatch:
 
 permissions:

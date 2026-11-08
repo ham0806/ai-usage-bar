@@ -1,12 +1,16 @@
 # AI Usage Bar
 
+[![ci](https://github.com/ham0806/ai-usage-bar/actions/workflows/ci.yml/badge.svg)](https://github.com/ham0806/ai-usage-bar/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/ham0806/ai-usage-bar)](https://github.com/ham0806/ai-usage-bar/releases)
+[![license](https://img.shields.io/github/license/ham0806/ai-usage-bar)](LICENSE)
+
 [English](README.md) | 日本語
 
 Windows 11 のタスクバー通知領域の左隣に、AI コーディングツールの使用量を常時表示します。Cursor / Codex / Claude / OpenCode Go / Command Code に対応し、設定で表示するものを選べます。
 
 ![タスクバーの使用率](docs/bar.png)
 
-タスクバーにはアイコンと使用率だけを出します。左クリックで内訳・リセット・課金周期などの詳細、右クリックから更新・設定・終了ができます。
+タスクバーにはアイコンと使用率を出します（OpenCode Go や Command Code のように残高が取れるものは金額）。左クリックで内訳・リセット・課金周期などの詳細、右クリックから更新・設定・終了ができます。
 
 ![詳細フライアウト](docs/flyout.png)
 
@@ -14,7 +18,7 @@ Windows 11 のタスクバー通知領域の左隣に、AI コーディングツ
 
 [Releases](https://github.com/ham0806/ai-usage-bar/releases) から `AI-Usage-Bar.exe` をダウンロードして実行します。
 
-表示言語は Windows の表示言語（英語 / 日本語）に合わせます。設定から上書きできます。
+表示言語は Windows の表示言語（英語 / 日本語 / 簡体字中国語 / スペイン語 / ブラジルポルトガル語 / ドイツ語）に合わせます。設定から上書きできます。
 
 ## 必要環境
 
@@ -85,7 +89,7 @@ exe から起動しているときは、「Windows 起動時に開始」もそ�
 
 ## Command Code の認証
 
-`%USERPROFILE%\.commandcode\auth.json`（または環境変数 `COMMANDCODE_HOME`）のトークン、環境変数 `COMMAND_CODE_API_KEY`、設定に貼った API キーの順に使います。`GET https://api.commandcode.ai/alpha/billing/credits` で 5時間・週次の上限とクレジット残高を、`/alpha/billing/subscriptions` でプラン名を読みます。ログインしていないときは `commandcode login` を実行するか、API キーを貼ってください。
+`%USERPROFILE%\.commandcode\auth.json`（または環境変数 `COMMANDCODE_HOME`）のトークン、環境変数 `COMMAND_CODE_API_KEY`、設定に貼った API キーの順に使います。`GET https://api.commandcode.ai/alpha/billing/credits` で 5時間・週次の上限とクレジット残高を、`/alpha/billing/subscriptions` でプラン名を読みます。バーには残高（USD）を出し、フライアウトに 5時間・週次の使用率も並べます。ログインしていないときは `commandcode login` を実行するか、API キーを貼ってください。
 
 ## 設定
 
@@ -107,9 +111,27 @@ exe から起動しているときは、「Windows 起動時に開始」もそ�
 
 推奨は 64px 前後の正方形です。暗いタスクバーには `-dark`、明るいときは `-light` を使います。これらのファイルはコミットしないでください。
 
+## 構成
+
+`net8.0-windows` のプロジェクトは 2 つです。
+
+```text
+src/AiUsageBar          WPF シェル: タスクバーウィジェット、フライアウト、設定画面、アイコン読み込み
+src/AiUsageBar.Core     UI 非依存のコア: プロバイダ、認証、ポーリング、レイアウト計算、Win32 連携
+tests/AiUsageBar.Tests  コアだけを対象にした xUnit テスト（WPF 非依存）
+```
+
+`AiUsageBar.Core` は WPF を参照していないため、ウィンドウを開かずにすべて検証できます。
+
+- `Providers/` の各プロバイダは static クラスです。`Auth/` で自分の資格情報を解決し、API の応答を `Models.cs` の型へ変換し、失敗は `ProviderErrors` として返します。設定画面は `ProviderRegistry.All` だけを見て描画するので、プロバイダの追加はそこに 1 件足すだけで済みます。
+- `Poller` が更新ループとプロバイダごとのバックオフを持ちます。`WidgetLayout` はバーの座標計算を純粋関数で行うため、ペイロード・レイアウト・ローカライズのテストは画面なしで走ります。
+- オーバーレイは Win32 側です（`Win32/Taskbar.cs`）。通知領域を探し、その隣に子 HWND を置きます。`Win32/Fullscreen.cs` は全画面のウィンドウが前面にある間バーを隠します。
+
+余白・書体・配色の規約は [DESIGN.md](DESIGN.md) にあります。
+
 ## テスト
 
-テストは push ごとの CI ではなくローカルで実行します。CI ワークフローは **Actions → ci → Run workflow** からの手動実行のみです。
+`ci` は `master` への push と pull request で `dotnet test` を実行します。
 
 ```powershell
 .\test.ps1
@@ -126,3 +148,7 @@ git config core.hooksPath .githooks
 ## 制限
 
 タスクバーへの重ね合わせは Windows の公式 API ではありません。大型アップデートのあとで位置がずれることがあります。Chrome の App-Bound Encryption があるため、ブラウザ Cookie の自動抽出はしていません。
+
+## ライセンス
+
+[MIT](LICENSE) © 2026 ham0806

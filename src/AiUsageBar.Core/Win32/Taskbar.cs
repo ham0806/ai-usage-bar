@@ -29,6 +29,10 @@ public static class Taskbar
             taskbar = fallback.ToTuple();
         }
 
+        // Windows 11 の新しいタスクバーは uEdge が 0（左）のまま返ることがある。
+        // そのままだと横長のタスクバーを縦向きと誤認し、バーが画面外まで伸びる。
+        var edge = NormalizeEdge((int)abd.uEdge, taskbar);
+
         (int Left, int Top, int Right, int Bottom) tray;
         var notify = NativeMethods.FindWindowExW(trayHwnd, 0, "TrayNotifyWnd", null);
         if (notify != 0 && NativeMethods.GetWindowRect(notify, out var notifyRect))
@@ -38,7 +42,7 @@ public static class Taskbar
         else
         {
             var (left, top, right, bottom) = taskbar;
-            if (abd.uEdge is NativeMethods.AbeBottom or NativeMethods.AbeTop)
+            if (edge is NativeMethods.AbeBottom or NativeMethods.AbeTop)
             {
                 var width = Math.Min(220, Math.Max(80, (right - left) / 6));
                 tray = (right - width, top, right, bottom);
@@ -50,7 +54,21 @@ public static class Taskbar
             }
         }
 
-        return new TaskbarLayout((int)abd.uEdge, taskbar, tray, trayHwnd);
+        return new TaskbarLayout(edge, taskbar, tray, trayHwnd);
+    }
+
+    /// <summary>
+    /// タスクバーの矩形から横向き／縦向きを判定し、uEdge が信用できないときだけ補正する。
+    /// </summary>
+    internal static int NormalizeEdge(int edge, (int Left, int Top, int Right, int Bottom) taskbar)
+    {
+        var horizontal = taskbar.Right - taskbar.Left >= taskbar.Bottom - taskbar.Top;
+        if (horizontal)
+        {
+            return edge is NativeMethods.AbeTop or NativeMethods.AbeBottom ? edge : NativeMethods.AbeBottom;
+        }
+
+        return edge is NativeMethods.AbeLeft or NativeMethods.AbeRight ? edge : NativeMethods.AbeLeft;
     }
 
     public static (int X, int Y) WidgetPosition(

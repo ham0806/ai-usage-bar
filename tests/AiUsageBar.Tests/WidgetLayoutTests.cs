@@ -39,6 +39,23 @@ public class WidgetLayoutTests
     }
 
     [Fact]
+    public void HorizontalTaskbarFixesStaleLeftEdge()
+    {
+        // Windows 11 の Shell は uEdge=0 を返すことがある。矩形が横長なら下辺として扱う。
+        Assert.Equal(3, Taskbar.NormalizeEdge(0, (0, 1392, 2560, 1440)));
+        Assert.Equal(3, Taskbar.NormalizeEdge(2, (0, 1392, 2560, 1440)));
+        Assert.Equal(1, Taskbar.NormalizeEdge(1, (0, 0, 2560, 48)));
+    }
+
+    [Fact]
+    public void VerticalTaskbarKeepsLeftOrRightEdge()
+    {
+        Assert.Equal(0, Taskbar.NormalizeEdge(0, (0, 0, 60, 1440)));
+        Assert.Equal(2, Taskbar.NormalizeEdge(2, (2500, 0, 2560, 1440)));
+        Assert.Equal(0, Taskbar.NormalizeEdge(3, (0, 0, 60, 1440)));
+    }
+
+    [Fact]
     public void WidgetPositionSitsLeftOfTrayOnBottomTaskbar()
     {
         var layout = new TaskbarLayout(
